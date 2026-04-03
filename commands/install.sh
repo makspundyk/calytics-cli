@@ -79,6 +79,25 @@ fi
 source "$SCRIPT_DIR/cal.sh" 2>/dev/null || true
 ok "cal CLI loaded in current shell"
 
+# Ensure .env and .env.local exist in the project root (next to calytics-cli/)
+ENV_DIR="$SCRIPT_DIR/env"
+if [ ! -f "$PROJECT_DIR/.env.local" ]; then
+  info "Creating .env.local from template..."
+  cp "$ENV_DIR/local.env" "$PROJECT_DIR/.env.local"
+  ok ".env.local created"
+else
+  ok ".env.local exists"
+fi
+
+if [ ! -f "$PROJECT_DIR/.env" ]; then
+  info "Creating .env (auto-detecting WSL IP)..."
+  WSL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+  sed "s/__WSL_IP__/$WSL_IP/g" "$ENV_DIR/dot-env.template" > "$PROJECT_DIR/.env"
+  ok ".env created (IP: $WSL_IP)"
+else
+  ok ".env exists"
+fi
+
 # ══════════════════════════════════════════════════════════════════
 # 2. System packages (apt)
 # ══════════════════════════════════════════════════════════════════

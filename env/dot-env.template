@@ -1,0 +1,4 @@
+# Docker Compose environment variables
+# Update FE_API_BASE if your WSL IP changes (run: hostname -I | awk '{print $1}')
+FE_API_BASE=http://__WSL_IP__:9000
+FE_API_URL=http://__WSL_IP__:9000/api
