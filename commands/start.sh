@@ -14,7 +14,7 @@ if [ "$target" = "all" ]; then
 
   # Docker services
   info "Starting Docker services (admin, fe)..."
-  docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app up -d 2>/dev/null
+  dc --profile app up -d 2>/dev/null
   ok "Docker services started"
 
   # Process services

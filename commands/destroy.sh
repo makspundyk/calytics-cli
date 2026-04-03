@@ -5,7 +5,7 @@
 phase "Destroying local environment"
 
 info "Stopping Docker containers..."
-docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app --profile docs down -v 2>/dev/null || true
+dc --profile app --profile docs down -v 2>/dev/null || true
 
 TF_DIR="$CAL_PROJECT/terraform/local"
 if [ -d "$TF_DIR/.terraform" ]; then

@@ -33,6 +33,7 @@ set -euo pipefail
 CLI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT_DIR="$(cd "$CLI_DIR/.." && pwd)"
 COMPOSE_FILE="$CLI_DIR/infra/docker-compose.yml"
+COMPOSE_PROJECT="calytics"
 SEEDERS_DIR="$CLI_DIR/seeders"
 
 # ── Defaults ─────────────────────────────────────────────────────
@@ -154,7 +155,7 @@ if [ "$DESTROY" = true ]; then
   phase "Destroying local environment"
 
   info "Stopping Docker containers..."
-  docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" --profile app --profile docs down -v 2>/dev/null || true
+  docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" -p "$COMPOSE_PROJECT" --profile app --profile docs down -v 2>/dev/null || true
 
   if [ -d "$SCRIPT_DIR/terraform/local/.terraform" ]; then
     info "Destroying Terraform resources..."
@@ -239,7 +240,7 @@ if [ "$SERVICES_ONLY" = false ]; then
   done
 
   info "Starting LocalStack and Postgres..."
-  docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" up -d localstack postgres
+  docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" -p "$COMPOSE_PROJECT" up -d localstack postgres
 
   info "Waiting for LocalStack..."
   for i in $(seq 1 30); do
@@ -505,7 +506,7 @@ if [ "$INFRA_ONLY" = false ]; then
   if [ -n "$PROFILES" ]; then
     for profile in $PROFILES; do
       info "Starting Docker profile: $profile..."
-      docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" --profile "$profile" up -d
+      docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" -p "$COMPOSE_PROJECT" --profile "$profile" up -d
     done
   fi
 

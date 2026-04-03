@@ -4,7 +4,13 @@
 # Derived paths (from CAL_ROOT and CAL_PROJECT, set by cal.sh)
 COMPOSE_FILE="$CAL_ROOT/infra/docker-compose.yml"
 COMPOSE_ENV="$CAL_PROJECT/.env"
+COMPOSE_PROJECT="calytics"        # fixed name — docker compose uses dir name by default, we override to stay consistent
 SEEDERS_DIR="$CAL_ROOT/seeders"
+
+# Wrapper: docker compose with correct file, env, and project name
+dc() {
+  docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" -p "$COMPOSE_PROJECT" "$@"
+}
 
 # Wait for a port to become available (up to $2 seconds, default 30)
 wait_for_port() {
@@ -95,7 +101,7 @@ start_docker_service() {
   esac
 
   # Compose-managed containers
-  docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app --profile docs up -d "$(
+  dc --profile app --profile docs up -d "$(
     case "$svc" in
       admin) echo "be-admin" ;;
       fe)    echo "fe" ;;
