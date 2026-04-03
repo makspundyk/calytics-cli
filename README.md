@@ -30,8 +30,8 @@ cal install
 cal start                     # Start all (infra + services)
 cal start infra               # Start just LocalStack + Postgres
 cal start <service>           # Start one (auto-starts infra if needed)
-cal stop                      # Stop everything (services + infra)
-cal stop services             # Stop app services only (keep infra)
+cal stop                      # Stop all app services (keeps infra)
+cal stop infra                # Stop everything (services + infra)
 cal stop <service>            # Stop one service
 cal restart <service>         # Restart a single service
 cal status                    # Show what's running

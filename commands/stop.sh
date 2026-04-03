@@ -3,11 +3,11 @@
 # Stop services and/or infrastructure.
 #
 # Targets:
-#   cal stop              Stop everything (services + infra)
-#   cal stop services     Stop app services only (keep infra running)
+#   cal stop              Stop all app services (keeps infra)
+#   cal stop infra        Stop everything (services + infra)
 #   cal stop <service>    Stop one service
 
-target="${1:-}"
+target="${1:-all}"
 
 stop_all_services() {
   for svc in "${SVC_ALL_LIST[@]}"; do
@@ -26,18 +26,17 @@ stop_infra() {
 }
 
 case "$target" in
-  "")
-    # No argument = stop everything
-    phase "Stopping everything"
+  all)
+    phase "Stopping all services"
+    stop_all_services
+    ok "All services stopped (infra still running)"
+    ;;
+
+  infra)
+    phase "Stopping everything (services + infra)"
     stop_all_services
     stop_infra
     ok "Everything stopped (data preserved in Docker volumes)"
-    ;;
-
-  services)
-    phase "Stopping all services (keeping infra)"
-    stop_all_services
-    ok "Services stopped — infra still running"
     ;;
 
   *)

@@ -57,7 +57,7 @@ _cal_completions() {
         COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui all infra" -- "$cur"))
         ;;
       stop)
-        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui services" -- "$cur"))
+        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui infra" -- "$cur"))
         ;;
       seed)
         COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables" -- "$cur"))
