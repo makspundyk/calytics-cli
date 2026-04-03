@@ -59,6 +59,7 @@ cat << 'EOF'
 
   SETUP
     cal install                   Install all system dependencies + register CLI
+    cal system-check              Full diagnostic report (tools, env, consistency)
 
   SERVICES
     be        calytics-be             :3333
