@@ -19,7 +19,7 @@ if [ "$target" = "all" ]; then
 
   # Process services
   for svc in "${SVC_PROCESS_LIST[@]}"; do
-    local dir="$CAL_PROJECT/${SVC_DIR[$svc]}"
+    dir="$CAL_PROJECT/${SVC_DIR[$svc]}"
     [ ! -d "$dir" ] && continue
     info "Starting ${SVC_LABEL[$svc]}..."
     start_process_service "$svc"
@@ -34,7 +34,7 @@ else
   if svc_is_docker "$svc"; then
     start_docker_service "$svc"
   elif svc_is_process "$svc"; then
-    local port="${SVC_PORT[$svc]}"
+    port="${SVC_PORT[$svc]}"
     [ "$port" -gt 0 ] && kill_port "$port"
     start_process_service "$svc"
   fi

@@ -18,7 +18,7 @@ target="${1:-}"
 [ -z "$target" ] && fail "Usage: cal seed <target> (all, secrets, queues, client, admins, webhooks, plans, api-keys, ses, a2a-tables)"
 
 run_seeder() {
-  local name="$1" script="$CAL_ROOT/seeders/${name}.sh"
+  name="$1" script="$CAL_ROOT/seeders/${name}.sh"
   if [ -f "$script" ]; then
     info "Seeding: $name"
     bash "$script"

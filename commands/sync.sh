@@ -21,7 +21,7 @@ case "$target" in
     ;;
   terraform)
     phase "Syncing Terraform from dev environment"
-    local tf_script="$CAL_PROJECT/scripts/sync-local-terraform.sh"
+    tf_script="$CAL_PROJECT/scripts/sync-local-terraform.sh"
     [ -f "$tf_script" ] && bash "$tf_script" || fail "sync-local-terraform.sh not found"
     ;;
   *)

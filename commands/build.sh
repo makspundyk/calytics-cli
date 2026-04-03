@@ -86,7 +86,7 @@ case "$target" in
 
   shims)
     phase "Building alias shims + patching pino"
-    local shim_script="$CAL_PROJECT/calytics-be/scripts/build-local-alias-shims.sh"
+    shim_script="$CAL_PROJECT/calytics-be/scripts/build-local-alias-shims.sh"
     [ ! -f "$shim_script" ] && fail "Shim script not found: $shim_script"
     (cd "$CAL_PROJECT/calytics-be" && bash "$shim_script")
     ;;
@@ -99,7 +99,7 @@ case "$target" in
 
   admin)
     phase "Building calytics-be-admin"
-    local admin_dir="$CAL_PROJECT/calytics-be-admin/dist"
+    admin_dir="$CAL_PROJECT/calytics-be-admin/dist"
     if [ -d "$admin_dir" ]; then
       sudo rm -rf "$admin_dir" 2>/dev/null || rm -rf "$admin_dir"
     fi
