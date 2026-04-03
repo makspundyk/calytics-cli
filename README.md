@@ -107,6 +107,13 @@ cal migrate revert --all      # Revert all migrations
 cal migrate dynamo            # Run DynamoDB migrations
 ```
 
+### Git (across all repos)
+
+```bash
+cal git fetch                 # Fetch all remotes + show behind/ahead/dirty
+cal git status                # Show branch + dirty state (no network)
+```
+
 ### Sync
 
 ```bash

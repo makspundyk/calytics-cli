@@ -68,6 +68,10 @@ cat << 'EOF'
     cal migrate revert --all      Revert all migrations
     cal migrate dynamo            Run DynamoDB migrations
 
+  GIT
+    cal git fetch                 Fetch all repos + show branch/behind/dirty status
+    cal git status                Show branch + dirty state (no fetch)
+
   SYNC
     cal sync finapi               Sync FinAPI sandbox credentials → LocalStack
     cal sync qonto                Sync Qonto prod credentials → LocalStack

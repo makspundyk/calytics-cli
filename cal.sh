@@ -63,7 +63,10 @@ _cal_completions() {
         COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables" -- "$cur"))
         ;;
       build)
-        COMPREPLY=($(compgen -W "shared shims be admin a2a" -- "$cur"))
+        COMPREPLY=($(compgen -W "shared shims be admin a2a docs" -- "$cur"))
+        ;;
+      git)
+        COMPREPLY=($(compgen -W "fetch status" -- "$cur"))
         ;;
       migrate)
         COMPREPLY=($(compgen -W "run revert dynamo" -- "$cur"))
