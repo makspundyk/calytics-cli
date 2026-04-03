@@ -104,6 +104,7 @@ services:
   docs:
     build:
       context: ../../client-openapi-docs
+      pull: true
     container_name: calytics_docs
     ports:
       - "8080:80"
