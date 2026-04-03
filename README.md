@@ -28,7 +28,9 @@ cal install
 
 ```bash
 cal start [service|all]       # Start one or all services
-cal stop [service|all]        # Stop one or all services
+cal stop [service|all]        # Stop app services (keeps infra)
+cal stop infra                # Stop LocalStack + Postgres (data preserved)
+cal stop everything           # Stop all + infrastructure
 cal restart <service>         # Restart a single service
 cal status                    # Show what's running
 cal logs <service>            # Tail logs (Ctrl+C to stop)

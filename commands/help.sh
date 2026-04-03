@@ -15,8 +15,11 @@ cat << 'EOF'
   ╚═══════════════════════════════════════════╝
 
   SERVICES
-    cal start [service|all]       Start one or all services
-    cal stop [service|all]        Stop one or all services
+    cal start [service|all]       Start one or all app services
+    cal start infra               Start LocalStack + Postgres (re-seeds queues if needed)
+    cal stop [service|all]        Stop app services (keeps infra running)
+    cal stop infra                Stop LocalStack + Postgres (data preserved)
+    cal stop everything           Stop all services + infrastructure
     cal restart <service>         Restart a single service
     cal status                    Show what's running
     cal logs <service>            Tail logs (last 80 lines + follow)
