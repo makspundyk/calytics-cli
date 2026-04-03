@@ -54,7 +54,7 @@ ensure_infra() {
   if ! aws --endpoint-url="$LS" sqs get-queue-url \
        --queue-name "$CANARY_SQS_QUEUE" --region "$AWS_REGION" &>/dev/null; then
     warn "SQS queues lost — re-seeding..."
-    run_seeder queues 2>&1 | tail -3
+    run_seeder "$SEEDER_QUEUES" 2>&1 | tail -3
     ok "SQS queues re-seeded"
   fi
 
@@ -62,7 +62,7 @@ ensure_infra() {
   if ! aws --endpoint-url="$LS" secretsmanager get-secret-value \
        --secret-id "$CANARY_SECRET_ID" --region "$AWS_REGION" &>/dev/null; then
     warn "Secrets lost — re-seeding..."
-    run_seeder secrets 2>&1 | tail -3
+    run_seeder "$SEEDER_SECRETS" 2>&1 | tail -3
     ok "Secrets re-seeded"
   fi
 
@@ -71,7 +71,7 @@ ensure_infra() {
                   --query 'length(items)' --output text 2>/dev/null || echo "0")
   if [ "$api_key_count" = "0" ] || [ "$api_key_count" = "None" ]; then
     warn "API Gateway keys lost — re-seeding..."
-    run_seeder api-keys 2>&1 | tail -3
+    run_seeder "$SEEDER_API_KEYS" 2>&1 | tail -3
     ok "API keys re-seeded"
   fi
 }

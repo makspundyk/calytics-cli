@@ -85,10 +85,31 @@ SVC_INFRA_DEPENDENT=(be a2a rs admin fe)    # need LocalStack + Postgres to run
 SVC_INDEPENDENT=(docs dynamo-gui)           # can run without infra
 
 # ── LocalStack resource names (for health checks / re-seeding) ───
-# These are the canary resources checked after LocalStack restart.
-# If they're missing, ensure_infra() triggers the corresponding seeder.
 CANARY_SQS_QUEUE="calytics-be-local-data-enrichment.fifo"
 CANARY_SECRET_ID="calytics-be-admin/api-key-encryption"
+
+# ── Seeder registry (name → filename without .sh) ────────────────
+# Change a name here → seeder_path() and run_seeder() pick it up.
+# Files live in $CAL_ROOT/seeders/<value>.sh
+SEEDER_SECRETS="secrets"
+SEEDER_QUEUES="queues"
+SEEDER_SES="ses"
+SEEDER_CLIENT="client"
+SEEDER_WEBHOOKS="webhooks"
+SEEDER_PLANS="plans"
+SEEDER_API_KEYS="api-keys"
+SEEDER_A2A_TABLES="a2a-tables"
+
+# Ordered list for `cal seed all`
+SEEDER_ALL_LIST=(
+  "$SEEDER_SECRETS"
+  "$SEEDER_QUEUES"
+  "$SEEDER_SES"
+  "$SEEDER_CLIENT"
+  "$SEEDER_WEBHOOKS"
+  "$SEEDER_PLANS"
+  "$SEEDER_API_KEYS"
+)
 
 # ── Git author config ────────────────────────────────────────────
 GIT_AUTHOR_NAME="Maksym Pundyk"

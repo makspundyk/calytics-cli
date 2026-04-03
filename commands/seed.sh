@@ -31,17 +31,13 @@ _seed() {
 case "$target" in
   all)
     phase "Running all seeders"
-    _seed secrets
-    _seed queues
-    _seed ses
-    # client + admins via be-admin npm scripts
+    for seeder in "${SEEDER_ALL_LIST[@]}"; do
+      _seed "$seeder"
+    done
+    # admins via be-admin npm script (not a standalone seeder)
     info "Seeding admins..."
     (cd "$BE_ADMIN_DIR" && npm run seed:admins 2>&1 | tail -3)
     ok "Admins seeded"
-    _seed client
-    _seed webhooks
-    _seed plans
-    _seed api-keys
     ok "All seeders complete"
     ;;
   admins)
