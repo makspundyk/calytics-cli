@@ -19,6 +19,7 @@ declare -A SVC_PORT=(
   [admin]=9000
   [fe]=5000
   [docs]=8080
+  [dynamo-gui]=8001
 )
 
 # ── Project directories (relative to CAL_PROJECT) ────────────────
@@ -36,6 +37,7 @@ declare -A SVC_CONTAINER=(
   [admin]=calytics_be_admin
   [fe]=calytics_fe
   [docs]=calytics_docs
+  [dynamo-gui]=dynamodb-gui
 )
 
 # ── Start commands (process-managed services) ────────────────────
@@ -60,12 +62,13 @@ declare -A SVC_LABEL=(
   [admin]="calytics-be-admin"
   [fe]="calytics-fe"
   [docs]="API docs"
+  [dynamo-gui]="DynamoDB GUI"
 )
 
 # ── Categorization ───────────────────────────────────────────────
 SVC_PROCESS_LIST=(be a2a rs)       # started as background Node processes
-SVC_DOCKER_LIST=(admin fe docs)    # started as Docker containers
-SVC_ALL_LIST=(be a2a rs admin fe docs)
+SVC_DOCKER_LIST=(admin fe docs dynamo-gui)  # started as Docker containers
+SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui)
 
 # ── Git author config ────────────────────────────────────────────
 GIT_AUTHOR_NAME="Maksym Pundyk"
@@ -87,6 +90,7 @@ svc_resolve() {
     admin|be-admin)            echo "admin" ;;
     fe|frontend)               echo "fe" ;;
     docs)                      echo "docs" ;;
+    dynamo-gui|dynamo|dg-ui)   echo "dynamo-gui" ;;
     *) return 1 ;;
   esac
 }

@@ -51,7 +51,7 @@ _cal_completions() {
   elif [ "$COMP_CWORD" -eq 2 ]; then
     case "$prev" in
       start|stop|restart|logs)
-        COMPREPLY=($(compgen -W "be a2a rs admin fe docs all" -- "$cur"))
+        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui all" -- "$cur"))
         ;;
       seed)
         COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables" -- "$cur"))

@@ -71,20 +71,38 @@ start_docker_service() {
   local svc="$1"
   local container="${SVC_CONTAINER[$svc]}"
   local label="${SVC_LABEL[$svc]}"
+  local port="${SVC_PORT[$svc]}"
 
   if container_is_running "$container"; then
-    ok "$label already running"
-  else
-    docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app --profile docs up -d "$(
-      # map service alias to docker-compose service name
-      case "$svc" in
-        admin) echo "be-admin" ;;
-        fe)    echo "fe" ;;
-        docs)  echo "docs" ;;
-      esac
-    )" 2>/dev/null
-    ok "$label started"
+    ok "$label already running on :$port"
+    return
   fi
+
+  # Standalone containers (not in docker-compose)
+  case "$svc" in
+    dynamo-gui)
+      docker run -d --rm \
+        --name "$container" \
+        -p "$port:8001" \
+        -e DYNAMO_ENDPOINT="http://host.docker.internal:${INFRA_LOCALSTACK_PORT}" \
+        -e AWS_REGION="$AWS_REGION" \
+        -e AWS_ACCESS_KEY_ID=test \
+        -e AWS_SECRET_ACCESS_KEY=test \
+        aaronshaf/dynamodb-admin &>/dev/null
+      ok "$label started on :$port"
+      return
+      ;;
+  esac
+
+  # Compose-managed containers
+  docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app --profile docs up -d "$(
+    case "$svc" in
+      admin) echo "be-admin" ;;
+      fe)    echo "fe" ;;
+      docs)  echo "docs" ;;
+    esac
+  )" 2>/dev/null
+  ok "$label started"
 }
 
 # Stop a process-managed service

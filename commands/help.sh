@@ -67,9 +67,6 @@ cat << 'EOF'
     cal sync qonto                Sync Qonto prod credentials → LocalStack
     cal sync terraform            Sync Terraform configs from dev environment
 
-  TOOLS
-    cal dynamo-gui                Start DynamoDB admin web UI (:8001)
-
   SETUP
     cal install                   Install all system deps + register CLI
     cal system-check              Full diagnostic (tools, env, consistency)
@@ -81,6 +78,7 @@ cat << 'EOF'
     admin       calytics-be-admin       :9000
     fe          calytics-fe             :5000
     docs        API docs                :8080
+    dynamo-gui  DynamoDB admin web UI   :8001
 
   DEPLOY vs BUILD
     deploy = infrastructure + terraform + database + seeds + start services
