@@ -47,7 +47,7 @@ case "$target" in
 
     # Show status
     echo ""
-    source "$CAL_ROOT/commands/status.sh"
+    run_cmd status
     ;;
 
   *)

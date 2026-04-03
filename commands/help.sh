@@ -3,8 +3,9 @@
 
 cmd="${1:-}"
 
-if [ -n "$cmd" ] && [ -f "$CAL_ROOT/commands/${cmd}.sh" ]; then
-  head -20 "$CAL_ROOT/commands/${cmd}.sh" | grep '^#' | grep -v '^#!/' | sed 's/^# \?//'
+cmd_file="$(cmd_path "$cmd")"
+if [ -n "$cmd" ] && [ -f "$cmd_file" ]; then
+  head -20 "$cmd_file" | grep '^#' | grep -v '^#!/' | sed 's/^# \?//'
   exit 0
 fi
 

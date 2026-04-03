@@ -52,17 +52,17 @@ ensure_infra() {
 
   # SQS queues
   if ! aws --endpoint-url="$LS" sqs get-queue-url \
-       --queue-name "calytics-be-local-data-enrichment.fifo" --region "$AWS_REGION" &>/dev/null; then
+       --queue-name "$CANARY_SQS_QUEUE" --region "$AWS_REGION" &>/dev/null; then
     warn "SQS queues lost — re-seeding..."
-    bash "$SEEDERS_DIR/queues.sh" 2>&1 | tail -3
+    run_seeder queues 2>&1 | tail -3
     ok "SQS queues re-seeded"
   fi
 
   # Secrets Manager
   if ! aws --endpoint-url="$LS" secretsmanager get-secret-value \
-       --secret-id "calytics-be-admin/api-key-encryption" --region "$AWS_REGION" &>/dev/null; then
+       --secret-id "$CANARY_SECRET_ID" --region "$AWS_REGION" &>/dev/null; then
     warn "Secrets lost — re-seeding..."
-    bash "$SEEDERS_DIR/secrets.sh" 2>&1 | tail -3
+    run_seeder secrets 2>&1 | tail -3
     ok "Secrets re-seeded"
   fi
 
@@ -71,7 +71,7 @@ ensure_infra() {
                   --query 'length(items)' --output text 2>/dev/null || echo "0")
   if [ "$api_key_count" = "0" ] || [ "$api_key_count" = "None" ]; then
     warn "API Gateway keys lost — re-seeding..."
-    bash "$SEEDERS_DIR/api-keys.sh" 2>&1 | tail -3
+    run_seeder api-keys 2>&1 | tail -3
     ok "API keys re-seeded"
   fi
 }

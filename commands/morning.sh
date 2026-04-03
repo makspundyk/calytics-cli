@@ -6,12 +6,12 @@ phase "Good morning"
 
 # 1. Fetch all repos
 info "Fetching all repos..."
-bash "$CAL_ROOT/commands/git.sh" fetch
+run_cmd git fetch
 
-# 2. System check (abbreviated — skip long checks, just show issues)
+# 2. System check
 info "Running system check..."
-bash "$CAL_ROOT/commands/system-check.sh"
+run_cmd system-check
 
 # 3. Start everything
 info "Starting environment..."
-bash "$CAL_ROOT/commands/start.sh" all
+run_cmd start all

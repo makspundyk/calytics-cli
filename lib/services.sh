@@ -84,6 +84,12 @@ SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui)
 SVC_INFRA_DEPENDENT=(be a2a rs admin fe)    # need LocalStack + Postgres to run
 SVC_INDEPENDENT=(docs dynamo-gui)           # can run without infra
 
+# ── LocalStack resource names (for health checks / re-seeding) ───
+# These are the canary resources checked after LocalStack restart.
+# If they're missing, ensure_infra() triggers the corresponding seeder.
+CANARY_SQS_QUEUE="calytics-be-local-data-enrichment.fifo"
+CANARY_SECRET_ID="calytics-be-admin/api-key-encryption"
+
 # ── Git author config ────────────────────────────────────────────
 GIT_AUTHOR_NAME="Maksym Pundyk"
 GIT_AUTHOR_EMAIL_COMPANY="m.pundyk@calytics.io"
@@ -113,5 +119,11 @@ svc_resolve() {
 svc_is_docker()  { [[ -n "${SVC_CONTAINER[$1]:-}" ]]; }
 svc_is_process() { [[ -n "${SVC_START[$1]:-}" ]]; }
 
-# ── Helper: get full path to service directory ───────────────────
-svc_path() { echo "$CAL_PROJECT/${SVC_DIR[$1]}"; }
+# ── Path getters ─────────────────────────────────────────────────
+svc_path()    { echo "$CAL_PROJECT/${SVC_DIR[$1]}"; }
+cmd_path()    { echo "$CAL_ROOT/commands/${1}.sh"; }
+seeder_path() { echo "$CAL_ROOT/seeders/${1}.sh"; }
+
+# ── Run another cal command from within a script ─────────────────
+run_cmd()    { source "$(cmd_path "$1")" "${@:2}"; }
+run_seeder() { bash "$(seeder_path "$1")"; }
