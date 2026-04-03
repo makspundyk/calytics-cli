@@ -7,7 +7,6 @@ phase "Destroying local environment"
 info "Stopping Docker containers..."
 dc --profile app --profile docs down -v 2>/dev/null || true
 
-TF_DIR="$CAL_PROJECT/terraform/local"
 if [ -d "$TF_DIR/.terraform" ]; then
   info "Destroying Terraform resources..."
   (cd "$TF_DIR" && terraform destroy -var-file="env/development.tfvars" -auto-approve 2>/dev/null) || true

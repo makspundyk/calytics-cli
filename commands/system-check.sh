@@ -170,7 +170,6 @@ else
 fi
 
 # Terraform state
-TF_DIR="$CAL_PROJECT/terraform/local"
 if [ -f "$TF_DIR/terraform.tfstate" ]; then
   check_pass "Terraform state exists"
 else

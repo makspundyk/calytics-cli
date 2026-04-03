@@ -35,6 +35,7 @@ SCRIPT_DIR="$(cd "$CLI_DIR/.." && pwd)"
 COMPOSE_FILE="$CLI_DIR/infra/docker-compose.yml"
 COMPOSE_PROJECT="calytics"
 SEEDERS_DIR="$CLI_DIR/seeders"
+TF_LOCAL_DIR="$CLI_DIR/infra/terraform/local"
 
 # ── Defaults ─────────────────────────────────────────────────────
 ENV="development"
@@ -120,7 +121,7 @@ infra_is_running() {
   # Check Postgres is healthy
   docker exec calytics_postgres pg_isready -U postgres -d calytics-admin -q 2>/dev/null || return 1
   # Check Terraform state exists (resources were created)
-  [ -f "$SCRIPT_DIR/terraform/local/terraform.tfstate" ] || return 1
+  [ -f "$TF_LOCAL_DIR/terraform.tfstate" ] || return 1
   # Check SQS queues actually exist (catches container recreates that wipe state)
   aws --endpoint-url=http://localhost:4566 sqs get-queue-url \
     --queue-name "calytics-be-local-data-enrichment.fifo" \
@@ -157,9 +158,9 @@ if [ "$DESTROY" = true ]; then
   info "Stopping Docker containers..."
   docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" -p "$COMPOSE_PROJECT" --profile app --profile docs down -v 2>/dev/null || true
 
-  if [ -d "$SCRIPT_DIR/terraform/local/.terraform" ]; then
+  if [ -d "$TF_LOCAL_DIR/.terraform" ]; then
     info "Destroying Terraform resources..."
-    (cd "$SCRIPT_DIR/terraform/local" && terraform destroy -var-file="env/${ENV}.tfvars" -auto-approve 2>/dev/null) || true
+    (cd "$TF_LOCAL_DIR" && terraform destroy -var-file="env/${ENV}.tfvars" -auto-approve 2>/dev/null) || true
   fi
 
   for port in 9000 5000 3333 3000 4566; do
@@ -267,7 +268,7 @@ if [ "$SERVICES_ONLY" = false ]; then
 # ══════════════════════════════════════════════════════════════════
   phase "Phase 2: Terraform (AWS resources -> LocalStack)"
 
-  TF_DIR="$SCRIPT_DIR/terraform/local"
+  TF_DIR="$TF_LOCAL_DIR"
   TF_VARS="-var-file=env/${ENV}.tfvars"
 
   # Apply skip flags

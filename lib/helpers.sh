@@ -6,6 +6,7 @@ COMPOSE_FILE="$CAL_ROOT/infra/docker-compose.yml"
 COMPOSE_ENV="$CAL_PROJECT/.env"
 COMPOSE_PROJECT="calytics"        # fixed name — docker compose uses dir name by default, we override to stay consistent
 SEEDERS_DIR="$CAL_ROOT/seeders"
+TF_DIR="$CAL_ROOT/infra/terraform/local"
 
 # Wrapper: docker compose with correct file, env, and project name
 dc() {
