@@ -131,6 +131,116 @@ cal logs be               # check log tailing (Ctrl+C)
 cal build shims           # check build
 ```
 
+## Keeping the CLI in sync with infrastructure changes
+
+The CLI mirrors infrastructure defined in the service repos. When someone adds a table, queue, secret, service, or env var in a service repo, the CLI must be updated to support it. **This is your highest-priority maintenance task.**
+
+### How to detect drift
+
+Before implementing any feature or fixing any bug in a Calytics service repo, run this audit:
+
+```bash
+# 1. Check Terraform for new/changed resources
+diff <(grep -r 'resource "aws_' $CAL_PROJECT/terraform/local/*.tf | sort) \
+     <(cat $CAL_ROOT/docs/last-known-resources.txt 2>/dev/null | sort)
+
+# 2. Check serverless.yml for new CloudFormation resources
+grep -A1 'Type: AWS::' $CAL_PROJECT/calytics-be/serverless.yml
+
+# 3. Check .env files for new variables
+for svc in be a2a admin rs; do
+  echo "=== ${svc} ==="
+  diff <(grep -oP '^[A-Z_]+=' "$CAL_PROJECT/${SVC_DIR[$svc]}/.env" 2>/dev/null | sort) \
+       <(grep -oP '^[A-Z_]+=' "$CAL_PROJECT/${SVC_DIR[$svc]}/.env.example" 2>/dev/null | sort)
+done
+
+# 4. Check for new services/repos
+ls -d $CAL_PROJECT/calytics-*/ | xargs -I{} basename {}
+```
+
+### Change-to-file mapping
+
+When you detect a change in a service repo, update the CLI following this mapping:
+
+| What changed | Where it's defined | CLI files to update |
+|---|---|---|
+| **New DynamoDB table** | `terraform/local/calytics-be.tf` or `serverless.yml` Resources section or `seeders/a2a-tables.sh` | `seeders/a2a-tables.sh` (if A2A/CC table), `commands/system-check.sh` (add consistency check), `infra/deploy.sh` (if terraform-managed) |
+| **New SQS queue** | `terraform/local/calytics-be.tf` or `seeders/queues.sh` | `seeders/queues.sh` (add queue creation + DLQ + redrive policy) |
+| **New Secrets Manager secret** | `terraform/local/calytics-be.tf` or `seeders/secrets.sh` | `seeders/secrets.sh` (add create-secret block) |
+| **New S3 bucket** | `terraform/local/calytics-be.tf` or `terraform/local/calytics-a2a.tf` | Terraform handles it — no seeder change needed |
+| **New service/repo** | New directory in `$CAL_PROJECT/` | `lib/services.sh` (all registries), `svc_resolve()`, `commands/help.sh`, `cal.sh` (tab completion), `infra/docker-compose.yml` (if Docker-managed) |
+| **New env var in a service .env** | `calytics-*/env` or `.env.example` | `commands/system-check.sh` (add to consistency checks if shared across repos), `env/defaults.sh` (if it needs a default) |
+| **New seeder/seed script** | Inline in deploy.sh or standalone | `seeders/<name>.sh` (new file), `commands/seed.sh` (add case), `commands/help.sh`, `cal.sh` (tab completion) |
+| **Port change** | `serverless.yml` custom.serverless-offline, `docker-compose.yml` | `lib/services.sh` (SVC_PORT) — propagates everywhere automatically |
+| **New npm script** (e.g., new migration) | Service `package.json` | `commands/migrate.sh` or `commands/build.sh` (add case if needed) |
+| **New Terraform resource type** | `terraform/local/*.tf` | `infra/deploy.sh` (Terraform phase), possibly `commands/system-check.sh` |
+| **Docker Compose service added** | `infra/docker-compose.yml` | `lib/services.sh` (add to SVC_CONTAINER, SVC_DOCKER_LIST), `infra/docker-compose.yml` |
+| **Shared module added** | New dir in `calytics-shared-modules/` | `commands/build.sh` shared section handles it automatically (iterates all git repos). `commands/system-check.sh` also auto-discovers. No change needed unless it needs special handling. |
+| **API key product added** | `seeders/api-keys.sh` hardcoded list | `seeders/api-keys.sh` (add product + key), `commands/system-check.sh` (if consistency check needed) |
+| **Webhook event type added** | `seeders/webhooks.sh` | `seeders/webhooks.sh` (add to webhook event list) |
+| **Product plan added** | `seeders/plans.sh` | Usually auto-discovered from `product_plans_product_type_enum` — no change. Only update if plan defaults (price, limits) differ. |
+
+### Step-by-step: when asked to work on a Calytics service repo
+
+1. **Before starting work**, scan for CLI drift:
+   - Read the service's `.env`, `serverless.yml`, `terraform/*.tf`, and `package.json`
+   - Compare DynamoDB table names, SQS queue names, secret IDs against CLI seeders
+   - Check if `lib/services.sh` has the correct port, directory, and container name
+
+2. **During implementation**, if you add or change:
+   - A DynamoDB table → update the relevant seeder AND `system-check.sh`
+   - An SQS queue → update `seeders/queues.sh`
+   - A secret → update `seeders/secrets.sh`
+   - An environment variable shared across repos → update `commands/system-check.sh` consistency section
+   - A service port → update `lib/services.sh`
+
+3. **After implementation**, verify:
+   ```bash
+   cal system-check    # all checks should pass
+   cal seed all        # seeders should complete without errors
+   cal status          # all services detected correctly
+   ```
+
+### Proactive detection patterns
+
+When reading code in any Calytics service, watch for these patterns that indicate CLI updates are needed:
+
+```typescript
+// New DynamoDB table → needs seeder or terraform resource
+new DynamoDBClient(...).send(new CreateTableCommand({ TableName: "calytics-..." }))
+@Entity({ tableName: process.env.NEW_TABLE_NAME })
+
+// New SQS queue → needs seeder
+process.env.NEW_QUEUE_URL
+new SQSClient(...).send(new SendMessageCommand({ QueueUrl: "..." }))
+
+// New secret → needs seeder
+secretsManager.getSecretValue({ SecretId: "calytics/new/secret/path" })
+process.env.NEW_SECRET_ID
+
+// New service port → needs services.sh update
+httpServer.listen(NEW_PORT)
+custom.serverless-offline.httpPort: NEW_PORT
+```
+
+### The `cal sync terraform` connection
+
+`cal sync terraform` runs `sync-local-terraform.sh` which auto-generates LocalStack-compatible Terraform from the real environment configs. When Terraform configs change in the service repos:
+
+1. Run `cal sync terraform` to pull changes
+2. Review the diff in `terraform/local/*.tf`
+3. If new resources were added (tables, queues, secrets), update the corresponding seeders
+4. If resources were renamed or removed, update seeders AND `system-check.sh`
+
+### What should NEVER be in the CLI
+
+- Application business logic
+- Service-specific TypeScript/JavaScript code
+- Test fixtures that belong in the service repo
+- Credentials or tokens (use env vars / Secrets Manager)
+
+The CLI is **infrastructure and orchestration only**.
+
 ## Repo conventions
 
 - Author for this repo: `Maksym Pundyk <maksym.p@ideainyou.com>`
