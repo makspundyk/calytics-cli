@@ -14,8 +14,9 @@
 #   Claude:     claude-code (npm global)
 #
 # Also:
+#   - Registers `cal` in ~/.bashrc and sources it immediately
 #   - Fixes file permissions across the project
-#   - Registers `cal` in ~/.bashrc if not already present
+#   - Configures git author for every repo
 
 set -euo pipefail
 
@@ -27,6 +28,7 @@ else
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
+CLI_DIRNAME="$(basename "$SCRIPT_DIR")"
 
 # ── Colors (inline — lib may not be sourced on first run) ────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -46,27 +48,53 @@ echo -e "${BOLD}  ╚═══════════════════�
 echo ""
 
 # ══════════════════════════════════════════════════════════════════
-# 1. System packages (apt)
+# 1. Register CLI + fix permissions (first — so `cal` works immediately)
 # ══════════════════════════════════════════════════════════════════
-phase "1/7  System packages"
+phase "1/8  Register CLI"
+
+# Fix permissions on all scripts
+info "Fixing file permissions..."
+find "$PROJECT_DIR" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
+find "$SCRIPT_DIR" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
+for repo_scripts in "$PROJECT_DIR"/calytics-*/scripts; do
+  [ -d "$repo_scripts" ] && find "$repo_scripts" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
+done
+ok "File permissions fixed"
+
+# Register cal in ~/.bashrc
+BASHRC="$HOME/.bashrc"
+CAL_SOURCE_LINE="source \"$SCRIPT_DIR/cal.sh\" 2>/dev/null"
+
+if grep -qF "$CLI_DIRNAME/cal.sh" "$BASHRC" 2>/dev/null; then
+  ok "cal CLI already in ~/.bashrc"
+else
+  info "Adding cal CLI to ~/.bashrc..."
+  echo "" >> "$BASHRC"
+  echo "# Calytics CLI" >> "$BASHRC"
+  echo "$CAL_SOURCE_LINE" >> "$BASHRC"
+  ok "cal CLI added to ~/.bashrc"
+fi
+
+# Source it now so `cal` is available for the rest of this script
+source "$SCRIPT_DIR/cal.sh" 2>/dev/null || true
+ok "cal CLI loaded in current shell"
+
+# ══════════════════════════════════════════════════════════════════
+# 2. System packages (apt)
+# ══════════════════════════════════════════════════════════════════
+phase "2/8  System packages"
 
 PKGS=(
   git curl wget jq openssl lsof zip unzip
   build-essential ca-certificates gnupg
   software-properties-common apt-transport-https
-  pgrep-tools
 )
 
-# Filter to only missing packages
 MISSING=()
 for pkg in "${PKGS[@]}"; do
-  # pgrep-tools is virtual — check the binary instead
-  if [ "$pkg" = "pgrep-tools" ]; then
-    has pgrep || MISSING+=(procps)
-  elif ! dpkg -s "$pkg" &>/dev/null; then
-    MISSING+=("$pkg")
-  fi
+  dpkg -s "$pkg" &>/dev/null || MISSING+=("$pkg")
 done
+has pgrep || MISSING+=(procps)
 
 if [ ${#MISSING[@]} -eq 0 ]; then
   ok "All system packages present"
@@ -78,9 +106,9 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 2. Docker
+# 3. Docker
 # ══════════════════════════════════════════════════════════════════
-phase "2/7  Docker"
+phase "3/8  Docker"
 
 if has docker; then
   ok "Docker $(docker --version | grep -oP '\d+\.\d+\.\d+')"
@@ -88,10 +116,9 @@ else
   info "Installing Docker..."
   curl -fsSL https://get.docker.com | sudo sh
   sudo usermod -aG docker "$USER"
-  ok "Docker installed (you may need to log out and back in for group changes)"
+  ok "Docker installed (log out and back in for group changes)"
 fi
 
-# Docker Compose plugin
 if docker compose version &>/dev/null; then
   ok "Docker Compose $(docker compose version --short 2>/dev/null)"
 else
@@ -105,9 +132,9 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 3. Node.js 22 (via nvm)
+# 4. Node.js 22 (via nvm)
 # ══════════════════════════════════════════════════════════════════
-phase "3/7  Node.js"
+phase "4/8  Node.js"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
@@ -117,7 +144,6 @@ if [ ! -d "$NVM_DIR" ]; then
   ok "nvm installed"
 fi
 
-# Source nvm
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
 if has node && node -v | grep -q "^v22"; then
@@ -131,9 +157,9 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 4. AWS CLI v2
+# 5. AWS CLI v2
 # ══════════════════════════════════════════════════════════════════
-phase "4/7  AWS CLI"
+phase "5/8  AWS CLI"
 
 if has aws; then
   ok "AWS CLI $(aws --version 2>&1 | head -1)"
@@ -148,9 +174,9 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 5. Terraform
+# 6. Terraform
 # ══════════════════════════════════════════════════════════════════
-phase "5/7  Terraform"
+phase "6/8  Terraform"
 
 if has terraform; then
   ok "Terraform $(terraform version -json 2>/dev/null | jq -r .terraform_version 2>/dev/null || terraform version | head -1)"
@@ -164,11 +190,10 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 6. Global npm tools + snap packages
+# 7. Global npm tools + snap packages
 # ══════════════════════════════════════════════════════════════════
-phase "6/7  Dev tools"
+phase "7/8  Dev tools"
 
-# Serverless Framework
 if has serverless; then
   ok "Serverless $(serverless --version 2>/dev/null | head -1)"
 else
@@ -177,7 +202,6 @@ else
   ok "Serverless installed"
 fi
 
-# Claude Code
 if has claude; then
   ok "Claude Code installed"
 else
@@ -185,7 +209,6 @@ else
   npm install -g @anthropic-ai/claude-code 2>/dev/null && ok "Claude Code installed" || warn "Claude Code install failed (non-fatal)"
 fi
 
-# Snap + ngrok
 if has snap; then
   ok "snapd present"
 else
@@ -198,45 +221,43 @@ if has ngrok; then
   ok "ngrok present"
 else
   info "Installing ngrok via snap..."
-  sudo snap install ngrok 2>/dev/null && ok "ngrok installed" || warn "ngrok install failed (non-fatal — may need 'snap connect ngrok:network')"
+  sudo snap install ngrok 2>/dev/null && ok "ngrok installed" || warn "ngrok install failed (non-fatal)"
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 7. Project setup (permissions + bashrc)
+# 8. Git authors
 # ══════════════════════════════════════════════════════════════════
-phase "7/7  Project setup"
+phase "8/8  Git authors"
 
-# Fix permissions on all scripts
-info "Fixing file permissions..."
-find "$PROJECT_DIR" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
-find "$PROJECT_DIR/cli" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
-# Also fix scripts inside repos
-for repo_scripts in "$PROJECT_DIR"/calytics-*/scripts; do
-  [ -d "$repo_scripts" ] && find "$repo_scripts" -name "*.sh" -type f -exec chmod +x {} + 2>/dev/null
+for repo_dir in "$PROJECT_DIR"/*/; do
+  [ ! -d "$repo_dir/.git" ] && continue
+  repo_name=$(basename "$repo_dir")
+
+  if [ "$repo_name" = "$CLI_DIRNAME" ]; then
+    (cd "$repo_dir" && git config user.name "Maksym Pundyk" && git config user.email "maksym.p@ideainyou.com")
+    ok "$repo_name → maksym.p@ideainyou.com"
+  else
+    (cd "$repo_dir" && git config user.name "Maksym Pundyk" && git config user.email "m.pundyk@calytics.io")
+    ok "$repo_name → m.pundyk@calytics.io"
+  fi
 done
-ok "File permissions fixed"
 
-# Register cal in ~/.bashrc
-BASHRC="$HOME/.bashrc"
-CAL_SOURCE_LINE="source \"$SCRIPT_DIR/cal.sh\" 2>/dev/null"
-
-if grep -qF "calytics-cli/cal.sh" "$BASHRC" 2>/dev/null; then
-  ok "cal CLI already in ~/.bashrc"
-else
-  info "Adding cal CLI to ~/.bashrc..."
-  echo "" >> "$BASHRC"
-  echo "# Calytics CLI" >> "$BASHRC"
-  echo "$CAL_SOURCE_LINE" >> "$BASHRC"
-  ok "cal CLI added to ~/.bashrc"
+if [ -d "$PROJECT_DIR/calytics-shared-modules" ]; then
+  for mod_dir in "$PROJECT_DIR/calytics-shared-modules"/*/; do
+    [ ! -d "$mod_dir/.git" ] && continue
+    mod_name=$(basename "$mod_dir")
+    (cd "$mod_dir" && git config user.name "Maksym Pundyk" && git config user.email "m.pundyk@calytics.io")
+    ok "shared/$mod_name → m.pundyk@calytics.io"
+  done
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# Summary
+# Done
 # ══════════════════════════════════════════════════════════════════
 echo ""
 echo -e "${GREEN}${BOLD}  Setup complete!${NC}"
 echo ""
-echo -e "  Open a new terminal, then run:"
+echo -e "  ${CYAN}cal${NC} is ready. Try:"
 echo -e "    ${CYAN}cal help${NC}          — see all commands"
 echo -e "    ${CYAN}cal deploy${NC}        — start local environment"
 echo -e "    ${CYAN}cal status${NC}        — check what's running"

@@ -1,6 +1,11 @@
 #!/bin/bash
 # Shared utility functions
 
+# Derived paths (from CAL_ROOT and CAL_PROJECT, set by cal.sh)
+COMPOSE_FILE="$CAL_ROOT/infra/docker-compose.yml"
+COMPOSE_ENV="$CAL_PROJECT/.env"
+SEEDERS_DIR="$CAL_ROOT/seeders"
+
 # Wait for a port to become available (up to $2 seconds, default 30)
 wait_for_port() {
   local port="$1" timeout="${2:-30}"
@@ -70,7 +75,7 @@ start_docker_service() {
   if container_is_running "$container"; then
     ok "$label already running"
   else
-    docker compose -f "$CAL_ROOT/infra/docker-compose.yml" --env-file "$CAL_PROJECT/.env" --profile app --profile docs up -d "$(
+    docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" --profile app --profile docs up -d "$(
       # map service alias to docker-compose service name
       case "$svc" in
         admin) echo "be-admin" ;;

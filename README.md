@@ -2,11 +2,24 @@
 
 One command to manage the entire local development environment.
 
-## Setup
+## First-time install (fresh Linux)
 
-Already configured in `~/.bashrc`. Open a new terminal or run:
 ```bash
-source ~/.bashrc
+bash ~/projects/calytics/calytics-cli/commands/install.sh
+```
+
+This installs everything (git, docker, node 22, aws cli, terraform, serverless, ngrok, claude-code), fixes permissions, sets git authors, and registers `cal` in your shell. After it finishes, `cal` is ready — no restart needed.
+
+## Already installed
+
+```bash
+source ~/.bashrc       # or open a new terminal
+cal help
+```
+
+Re-run install anytime to pick up missing tools:
+```bash
+cal install
 ```
 
 ## Commands
