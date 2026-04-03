@@ -1,0 +1,507 @@
+[
+  {
+    "request_num": 1,
+    "description": "MATCH: Felix Meyer - DE IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "d37b4a8d-6ac6-45eb-b50d-39956584a3cc",
+      "correlation_id": "946a2c8c-6e03-4e20-8401-c7bca22af6a5",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:05.283Z"
+    }
+  },
+  {
+    "request_num": 2,
+    "description": "MATCH: Petro Koleshchuk - BE IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "02211577-8e3e-4854-be72-f7d244db691c",
+      "correlation_id": "e6d36b91-3d84-425b-90c6-2135ff3fd973",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:05.987Z"
+    }
+  },
+  {
+    "request_num": 3,
+    "description": "MATCH: Vitalii Toderian - BE IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "264b715d-5bf0-4aea-9a1a-c1eed14daf75",
+      "correlation_id": "8948a7ee-9d46-45d4-b955-e89f1c37eb26",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:06.699Z"
+    }
+  },
+  {
+    "request_num": 4,
+    "description": "MATCH: IdeaInYou O\u00dc - LT IBAN (1)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "be937097-0dce-41f2-8c64-cf7f2555b66e",
+      "correlation_id": "9fd8b360-9fc2-4265-b778-ddd4aaeaa585",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:07.419Z"
+    }
+  },
+  {
+    "request_num": 5,
+    "description": "MATCH: IdeaInYou O\u00dc - LT IBAN (2)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "542e781d-92af-4564-b8d5-f94faf7afbfb",
+      "correlation_id": "cc7bd6d1-7c62-42d9-b7f9-80a1714abf33",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:08.139Z"
+    }
+  },
+  {
+    "request_num": 6,
+    "description": "MATCH: Anastasiia Pundyk - LT IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "a19b6d20-2d70-4990-9d80-7afd2b736569",
+      "correlation_id": "bcaf3749-bfea-4410-b123-145ac4620f01",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:08.899Z"
+    }
+  },
+  {
+    "request_num": 7,
+    "description": "MATCH: Maksym Pundyk - LT IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "ae817621-7ba7-41d2-ba77-56324200cfcf",
+      "correlation_id": "f148f23c-2852-45ce-a2d5-1a4f4e2741cb",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:09.579Z"
+    }
+  },
+  {
+    "request_num": 8,
+    "description": "MATCH: Felix Meyer - DE IBAN (spaces)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "2c3a46fc-d2a0-41f0-9d30-ac3ea0da8937",
+      "correlation_id": "232f4fe3-1f10-4672-a33a-26106aa42757",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:10.299Z"
+    }
+  },
+  {
+    "request_num": 9,
+    "description": "CLOSE_MATCH: Felixx Meyer (extra x)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "55694a13-26d1-4417-b034-1bdb19d6c72e",
+      "correlation_id": "34dbfec0-4dc2-4a8a-97d2-c9cd470b672c",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:11.018Z"
+    }
+  },
+  {
+    "request_num": 10,
+    "description": "CLOSE_MATCH: Felix Meier (ei instead of ey)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "5e632ee1-08d4-4aa8-8b76-31e1824a5e86",
+      "correlation_id": "9dd180ee-de98-4456-9be1-cf2f9b5f9453",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:11.779Z"
+    }
+  },
+  {
+    "request_num": 11,
+    "description": "CLOSE_MATCH: Petro Koleschuk (missing h)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "d56c7463-e4c2-4dca-92ed-e98abae3c2bd",
+      "correlation_id": "632624e1-90a5-43ae-9ed6-b8155a88d881",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:12.599Z"
+    }
+  },
+  {
+    "request_num": 12,
+    "description": "CLOSE_MATCH: Vitaliy Toderian (iy instead of ii)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "3d25a2b3-e64e-41d3-b09a-1c5e97c41021",
+      "correlation_id": "86dbd721-4416-40e8-8f78-fcda557915ad",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:13.359Z"
+    }
+  },
+  {
+    "request_num": 13,
+    "description": "CLOSE_MATCH: Anastasia Pundyk (missing i)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "0be525a6-c45c-4d51-935f-8399ea5f6551",
+      "correlation_id": "a84271aa-5381-481e-b48e-d171d12699f3",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:14.068Z"
+    }
+  },
+  {
+    "request_num": 14,
+    "description": "NO_MATCH: John Smith on Felix's IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "79b6c38b-4337-46ba-a0ae-64ef1a75bb89",
+      "correlation_id": "ecd3609f-3a81-43ef-898d-f4cbda9cf02e",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:14.859Z"
+    }
+  },
+  {
+    "request_num": 15,
+    "description": "NO_MATCH: Maria Garcia on Petro's IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "a2ccf924-e040-44f0-8492-e21a3eddfa8d",
+      "correlation_id": "64d17848-ee28-4d59-80fd-132710dc6ea9",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:15.799Z"
+    }
+  },
+  {
+    "request_num": 16,
+    "description": "NO_MATCH: Hans Mueller on Vitalii's IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "9e859fa7-e534-487b-9525-39baf2757f5b",
+      "correlation_id": "b9977dc4-6e9c-4b38-9089-feb013819d10",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:16.539Z"
+    }
+  },
+  {
+    "request_num": 17,
+    "description": "NO_MATCH: Pierre Dupont on IdeaInYou IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "4c467d1d-eeb8-4f0d-adfe-84103a207ecf",
+      "correlation_id": "d3af5520-bac6-494d-a79f-e79b75df3688",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:17.399Z"
+    }
+  },
+  {
+    "request_num": 18,
+    "description": "NO_MATCH: Totally Wrong Name on Anastasiia's IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "d5497f36-6ce2-4e4d-a3e4-49070674ca10",
+      "correlation_id": "0177707f-ed1a-4b79-a6e8-574e12ab6410",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:18.119Z"
+    }
+  },
+  {
+    "request_num": 19,
+    "description": "NOAP: Romanian IBAN (Raiffeisen)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "7118ecf1-93ba-4d39-83d6-5d7606e0cf27",
+      "correlation_id": "58ab96ab-d01c-4060-bc59-9f81798acaa6",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:18.879Z"
+    }
+  },
+  {
+    "request_num": 20,
+    "description": "NOAP: Romanian IBAN (Revolut)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "079208e9-33fd-4adf-8721-2aa83deec87d",
+      "correlation_id": "be09636c-cad4-483b-9524-c88f1185c041",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:19.579Z"
+    }
+  },
+  {
+    "request_num": 21,
+    "description": "NOAP: Hungarian IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "d0ec41b6-0cba-460c-9227-c7790683b5fb",
+      "correlation_id": "a8c1f5a0-e565-4342-86e0-097ac99ac902",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:20.319Z"
+    }
+  },
+  {
+    "request_num": 22,
+    "description": "NOAP: Polish IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "75605cbd-6fc3-4386-8f54-0e7260162bf9",
+      "correlation_id": "ae24080b-1cde-464d-9eb7-e50781d8f508",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:21.139Z"
+    }
+  },
+  {
+    "request_num": 23,
+    "description": "NOAP: Czech IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "442bef37-c664-4a62-8f19-9f243eb9c0c1",
+      "correlation_id": "f5122af3-33f6-45d6-b814-35882f61f3ff",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:21.878Z"
+    }
+  },
+  {
+    "request_num": 24,
+    "description": "NOT_POSSIBLE: US IBAN (non-SEPA)",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:22.679Z",
+      "correlation_id": "1f112534-f75a-4da3-b459-433a9cb7722e",
+      "transaction_id": "e7a47868-44ed-418a-8828-aa3d138b8e7b"
+    }
+  },
+  {
+    "request_num": 25,
+    "description": "NOT_POSSIBLE: Invalid checksum IBAN",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:23.399Z",
+      "correlation_id": "439cd208-b9ce-4f7f-974e-862c5197b760",
+      "transaction_id": "d3ccb2ff-06fe-4b18-b2f0-870119b519ff"
+    }
+  },
+  {
+    "request_num": 26,
+    "description": "NOT_POSSIBLE: Gibberish IBAN",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:24.089Z",
+      "correlation_id": "96e4227d-7dbf-424e-abcb-9943096a29ce",
+      "transaction_id": "b5f3e137-08d2-4306-815b-b54d2a5ebfa8"
+    }
+  },
+  {
+    "request_num": 27,
+    "description": "NOT_POSSIBLE: Too short IBAN",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:24.939Z",
+      "correlation_id": "a2f30686-fd42-4b40-86df-5c05f8486945",
+      "transaction_id": "c801fbc2-0a2e-4c39-a6d5-dd7fe8f82f54"
+    }
+  },
+  {
+    "request_num": 28,
+    "description": "NOT_POSSIBLE: Australian IBAN (non-SEPA)",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:25.667Z",
+      "correlation_id": "03ad1f90-7022-4965-a3ed-21205780923c",
+      "transaction_id": "48bafe8a-3f8e-443c-b911-480d9680dfa8"
+    }
+  },
+  {
+    "request_num": 29,
+    "description": "NOT_POSSIBLE: Canadian account (non-SEPA)",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:26.418Z",
+      "correlation_id": "ca04cd00-0872-49f3-a474-bfb39037ee73",
+      "transaction_id": "9169c7a2-5671-4777-aa57-174a710752bf"
+    }
+  },
+  {
+    "request_num": 30,
+    "description": "NOT_POSSIBLE: Empty IBAN",
+    "http_code": 200,
+    "response": {
+      "status": "DG_CHECK_RESULT_NOT_POSSIBLE",
+      "created_at": "2026-04-01T08:41:27.119Z",
+      "correlation_id": "cbbba059-f569-43a3-b1e3-556bac5591f4",
+      "transaction_id": "868ca952-e282-4c2a-8196-3161a1d9c0d9"
+    }
+  },
+  {
+    "request_num": 31,
+    "description": "VALIDATION: Missing IBAN field",
+    "http_code": 400,
+    "response": {
+      "message": "Request validation failed: iban: Invalid input: expected string, received undefined",
+      "status": "error",
+      "reasonCode": "VALIDATE_ERROR",
+      "correlationId": "unknown"
+    }
+  },
+  {
+    "request_num": 32,
+    "description": "VALIDATION: Missing full_name field",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "b323465b-afa3-44a6-9aa5-b43ebff56356",
+      "correlation_id": "9bdc145f-d74b-44d8-bf14-40a79fa6f17c",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:28.458Z"
+    }
+  },
+  {
+    "request_num": 33,
+    "description": "VALIDATION: Missing correlation_id",
+    "http_code": 400,
+    "response": {
+      "message": "Request validation failed: correlation_id: Invalid input: expected string, received undefined",
+      "status": "error",
+      "reasonCode": "VALIDATE_ERROR",
+      "correlationId": "unknown"
+    }
+  },
+  {
+    "request_num": 34,
+    "description": "VALIDATION: Empty body",
+    "http_code": 400,
+    "response": {
+      "message": "Request validation failed: correlation_id: Invalid input: expected string, received undefined, payment_provider: Invalid input: expected string, received undefined, iban: Invalid input: expected string, received undefined",
+      "status": "error",
+      "reasonCode": "VALIDATE_ERROR",
+      "correlationId": "unknown"
+    }
+  },
+  {
+    "request_num": 35,
+    "description": "VALIDATION: Not JSON at all",
+    "http_code": 500,
+    "response": {
+      "message": "Internal Server Error",
+      "status": "error",
+      "reasonCode": "INTERNAL_ERROR",
+      "correlationId": "unknown"
+    }
+  },
+  {
+    "request_num": 36,
+    "description": "DUPLICATE: First request (original)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "db4f65c0-4e3e-4193-9c1f-63ff12d7b5db",
+      "correlation_id": "ccd701b4-b9ed-43f0-bcbc-95aaeb3bb8e3",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:30.899Z"
+    }
+  },
+  {
+    "request_num": 37,
+    "description": "DUPLICATE: Second request (same correlation_id)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "db4f65c0-4e3e-4193-9c1f-63ff12d7b5db",
+      "correlation_id": "ccd701b4-b9ed-43f0-bcbc-95aaeb3bb8e3",
+      "created_at": "2026-04-01T08:41:30.899Z",
+      "request_state": "NEW_REQUEST",
+      "status": "PROCESSING"
+    }
+  },
+  {
+    "request_num": 38,
+    "description": "DUPLICATE: Third request (same correlation_id)",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "db4f65c0-4e3e-4193-9c1f-63ff12d7b5db",
+      "correlation_id": "ccd701b4-b9ed-43f0-bcbc-95aaeb3bb8e3",
+      "created_at": "2026-04-01T08:41:30.899Z",
+      "request_state": "NEW_REQUEST",
+      "status": "PROCESSING"
+    }
+  },
+  {
+    "request_num": 39,
+    "description": "EDGE: Very large amount",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "a0d84cc8-4a16-4b2e-a0d2-30136eed1c22",
+      "correlation_id": "b1f06a17-69b1-4ad2-b459-6cdb98e2292c",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:34.839Z"
+    }
+  },
+  {
+    "request_num": 40,
+    "description": "EDGE: Unicode name with accents",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "f5311b39-1126-4788-ba79-eadaeb46dece",
+      "correlation_id": "10733574-4965-49d7-b8fa-9cd9048bbf0f",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:35.559Z"
+    }
+  },
+  {
+    "request_num": 41,
+    "description": "EDGE: Very long name",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "501e366b-bb17-4c56-a2ad-8d2149e3227d",
+      "correlation_id": "174acf22-1442-48ec-80ad-02950900e564",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:36.239Z"
+    }
+  },
+  {
+    "request_num": 42,
+    "description": "EDGE: Name with numbers",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "b6bded9f-2cd2-4aef-a3d0-3699cab8480b",
+      "correlation_id": "babee899-99ca-41c3-a948-e0c9638148aa",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:36.919Z"
+    }
+  },
+  {
+    "request_num": 43,
+    "description": "EDGE: Lowercase IBAN",
+    "http_code": 202,
+    "response": {
+      "transaction_id": "0fa3f655-893f-4b9e-b641-866187a007d9",
+      "correlation_id": "0a1a7586-b4a0-4039-aebb-f079c6b572c1",
+      "status": "PROCESSING",
+      "request_state": "NEW_REQUEST",
+      "created_at": "2026-04-01T08:41:37.698Z"
+    }
+  }
+]

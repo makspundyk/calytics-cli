@@ -1,0 +1,33 @@
+## Sample Request VTL Template
+## This template transforms the incoming request before sending it to Lambda
+
+{
+  "body": $input.json('$'),
+  "headers": {
+    #foreach($header in $input.params().header.keySet())
+    "$header": "$util.escapeJavaScript($input.params().header.get($header))"
+    #if($foreach.hasNext),#end
+    #end
+  },
+  "pathParameters": {
+    #foreach($param in $input.params().path.keySet())
+    "$param": "$util.escapeJavaScript($input.params().path.get($param))"
+    #if($foreach.hasNext),#end
+    #end
+  },
+  "queryParameters": {
+    #foreach($param in $input.params().querystring.keySet())
+    "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"
+    #if($foreach.hasNext),#end
+    #end
+  },
+  "requestContext": {
+    "requestId": "$context.requestId",
+    "stage": "$context.stage",
+    "resourcePath": "$context.resourcePath",
+    "httpMethod": "$context.httpMethod",
+    "apiId": "$context.apiId"
+  },
+  "timestamp": "$context.requestTime"
+}
+

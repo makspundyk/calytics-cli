@@ -1,0 +1,120 @@
+# Docker Compose reads .env from the --project-directory (project root),
+# not from the compose file's directory. All commands must include:
+#   docker compose -f cli/infra/docker-compose.yml --project-directory .
+# The cal CLI handles this automatically.
+
+services:
+  # ── Infrastructure (always started) ────────────────────────────
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: localstack_main
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=dynamodb,sqs,s3,secretsmanager,ses,iam,lambda,apigateway,sts,cloudwatch,cloudwatchlogs,ssm,events,logs
+      - PERSISTENCE=1
+      - DEBUG=0
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_EXECUTOR=docker
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "bash", "-c", "curl -sf http://localhost:4566/_localstack/health | grep -q '\"dynamodb\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - calytics-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: calytics_postgres
+    environment:
+      POSTGRES_DB: calytics-admin
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: register
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d calytics-admin"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - calytics-net
+
+  # ── Application services (profile: app) ────────────────────────
+  be-admin:
+    build:
+      context: ../../calytics-be-admin
+      target: development
+    container_name: calytics_be_admin
+    command: npm run start:dev
+    env_file:
+      - ../../calytics-be-admin/.env
+    environment:
+      NODE_ENV: development
+      PORT: 9000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: register
+      POSTGRES_NAME: calytics-admin
+      AWS_ENDPOINT: http://localstack:4566
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ../../calytics-be-admin:/app
+      - /app/node_modules
+    profiles: ["app"]
+    networks:
+      - calytics-net
+
+  fe:
+    build:
+      context: ../../calytics-fe
+      target: development
+    container_name: calytics_fe
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      # Browser calls need the host IP, not localhost (WSL/Docker networking)
+      # Set FE_API_BASE and FE_API_URL in .env (project root) to override
+      NUXT_PUBLIC_API_BASE: ${FE_API_BASE:-http://localhost:9000}
+      NUXT_PUBLIC_API_URL: ${FE_API_URL:-http://localhost:9000/api}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - be-admin
+    volumes:
+      - ../../calytics-fe:/app
+      - /app/node_modules
+    profiles: ["app"]
+    networks:
+      - calytics-net
+
+  docs:
+    build:
+      context: ../../client-openapi-docs
+    container_name: calytics_docs
+    ports:
+      - "8080:80"
+    profiles: ["docs"]
+    networks:
+      - calytics-net
+
+volumes:
+  localstack_data:
+  pg_data:
+
+networks:
+  calytics-net:
+    driver: bridge

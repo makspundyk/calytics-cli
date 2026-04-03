@@ -1,0 +1,15 @@
+## Sample Response VTL Template
+## This template transforms the Lambda response before sending it back to the client
+
+#set($inputRoot = $input.path('$'))
+{
+  "statusCode": 200,
+  "body": {
+    #if($inputRoot.body)
+    "data": $inputRoot.body,
+    #end
+    "requestId": "$context.requestId",
+    "timestamp": "$context.requestTime"
+  }
+}
+

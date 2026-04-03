@@ -1,0 +1,590 @@
+[{
+    // === BANK 26588 ===
+    "id": 26588,
+    "name": "UniCredit Bank - HypoVereinsbank",
+    "bic": "HYVEDEMMXXX",
+    "blz": "70020270",
+    "location": "DE",
+    "city": "M\u00fcnchen",
+    "isTestBank": false,
+    "popularity": 0,
+    "interfaces": [
+        {
+            "bankingInterface": "FINTS_SERVER",
+            "loginCredentials": [
+                {
+                    "label": "Direct B@nking-Nummer",
+                    "isSecret": false,
+                    "isVolatile": false,
+                    "isMandatory": true
+                },
+                {
+                    "label": "PIN",
+                    "isSecret": true,
+                    "isVolatile": false,
+                    "isMandatory": true
+                }
+            ],
+            "properties": [
+                "DECOUPLED_APPROACH"
+            ],
+            "health": 80,
+            "lastCommunicationAttempt": "2026-04-01T14:48:36.000+02:00",
+            "lastSuccessfulCommunication": "2026-04-01T14:48:40.000+02:00",
+            "isAisSupported": true,
+            "isPisSupported": true,
+            "aisCapabilities": {
+                "standingOrdersDownload": false,
+                "pendingTransactionsDownload": true
+            },
+            "paymentCapabilities": {
+                "sepaMoneyTransfer": true,
+                "sepaInstantMoneyTransfer": false,
+                "sepaFutureDatedMoneyTransfer": true,
+                "sepaInstantFutureDatedMoneyTransfer": false,
+                "sepaCollectiveMoneyTransfer": true,
+                "sepaInstantCollectiveMoneyTransfer": false,
+                "sepaFutureDatedCollectiveMoneyTransfer": true,
+                "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                "sepaDirectDebit": true,
+                "sepaStandingOrder": false,
+                "sepaInstantStandingOrder": false,
+                "domesticMoneyTransfer": false,
+                "domesticInstantMoneyTransfer": false,
+                "domesticFutureDatedMoneyTransfer": false,
+                "domesticInstantFutureDatedMoneyTransfer": false,
+                "domesticCollectiveMoneyTransfer": false,
+                "domesticInstantCollectiveMoneyTransfer": false,
+                "domesticFutureDatedCollectiveMoneyTransfer": false,
+                "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                "domesticStandingOrder": false,
+                "domesticInstantStandingOrder": false,
+                "accountAgnosticMoneyTransfer": false
+            },
+            "paymentConstraints": {
+                "sepaMoneyTransfer": {
+                    "mandatoryFields": {
+                        "counterpartName": true
+                    }
+                }
+            },
+            "aisAccountTypes": [
+                "Checking",
+                "Savings",
+                "Security",
+                "Loan"
+            ]
+        },
+        {
+            "bankingInterface": "XS2A",
+            "loginCredentials": [
+                {
+                    "label": "Direct B@nking-Nummer",
+                    "isSecret": false,
+                    "isVolatile": false,
+                    "isMandatory": true
+                },
+                {
+                    "label": "PIN",
+                    "isSecret": true,
+                    "isVolatile": false,
+                    "isMandatory": true
+                }
+            ],
+            "properties": [
+                "DECOUPLED_APPROACH"
+            ],
+            "health": 90,
+            "lastCommunicationAttempt": "2026-04-01T14:56:14.000+02:00",
+            "lastSuccessfulCommunication": "2026-04-01T14:56:17.000+02:00",
+            "isAisSupported": true,
+            "isPisSupported": true,
+            "aisCapabilities": {
+                "standingOrdersDownload": true,
+                "pendingTransactionsDownload": false
+            },
+            "paymentCapabilities": {
+                "sepaMoneyTransfer": true,
+                "sepaInstantMoneyTransfer": true,
+                "sepaFutureDatedMoneyTransfer": true,
+                "sepaInstantFutureDatedMoneyTransfer": false,
+                "sepaCollectiveMoneyTransfer": false,
+                "sepaInstantCollectiveMoneyTransfer": false,
+                "sepaFutureDatedCollectiveMoneyTransfer": false,
+                "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                "sepaDirectDebit": false,
+                "sepaStandingOrder": true,
+                "sepaInstantStandingOrder": false,
+                "domesticMoneyTransfer": false,
+                "domesticInstantMoneyTransfer": false,
+                "domesticFutureDatedMoneyTransfer": false,
+                "domesticInstantFutureDatedMoneyTransfer": false,
+                "domesticCollectiveMoneyTransfer": false,
+                "domesticInstantCollectiveMoneyTransfer": false,
+                "domesticFutureDatedCollectiveMoneyTransfer": false,
+                "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                "domesticStandingOrder": false,
+                "domesticInstantStandingOrder": false,
+                "accountAgnosticMoneyTransfer": false
+            },
+            "paymentConstraints": {
+                "sepaMoneyTransfer": {
+                    "mandatoryFields": {
+                        "counterpartName": true
+                    }
+                }
+            },
+            "aisAccountTypes": [
+                "Checking"
+            ]
+        },
+        {
+            "bankingInterface": "WEB_SCRAPER",
+            "loginCredentials": [
+                {
+                    "label": "Direct B@nking-Nummer",
+                    "isSecret": false,
+                    "isVolatile": false,
+                    "isMandatory": true
+                },
+                {
+                    "label": "PIN",
+                    "isSecret": true,
+                    "isVolatile": false,
+                    "isMandatory": true
+                }
+            ],
+            "properties": [
+                "DECOUPLED_APPROACH"
+            ],
+            "health": 90,
+            "lastCommunicationAttempt": "2026-04-01T14:51:08.000+02:00",
+            "lastSuccessfulCommunication": "2026-04-01T14:51:51.000+02:00",
+            "isAisSupported": true,
+            "isPisSupported": false,
+            "aisCapabilities": {
+                "standingOrdersDownload": false,
+                "pendingTransactionsDownload": false
+            },
+            "paymentCapabilities": {
+                "sepaMoneyTransfer": false,
+                "sepaInstantMoneyTransfer": false,
+                "sepaFutureDatedMoneyTransfer": false,
+                "sepaInstantFutureDatedMoneyTransfer": false,
+                "sepaCollectiveMoneyTransfer": false,
+                "sepaInstantCollectiveMoneyTransfer": false,
+                "sepaFutureDatedCollectiveMoneyTransfer": false,
+                "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                "sepaDirectDebit": false,
+                "sepaStandingOrder": false,
+                "sepaInstantStandingOrder": false,
+                "domesticMoneyTransfer": false,
+                "domesticInstantMoneyTransfer": false,
+                "domesticFutureDatedMoneyTransfer": false,
+                "domesticInstantFutureDatedMoneyTransfer": false,
+                "domesticCollectiveMoneyTransfer": false,
+                "domesticInstantCollectiveMoneyTransfer": false,
+                "domesticFutureDatedCollectiveMoneyTransfer": false,
+                "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                "domesticStandingOrder": false,
+                "domesticInstantStandingOrder": false,
+                "accountAgnosticMoneyTransfer": false
+            },
+            "aisAccountTypes": [
+                "CreditCard"
+            ]
+        }
+    ],
+    "bankGroup": {
+        "id": 16,
+        "name": "UniCredit (DE)",
+        "logo": {
+            "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/DE_UNICREDIT/default.svg"
+        },
+        "icon": {
+            "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/DE_UNICREDIT/default.svg"
+        }
+    },
+    "isBeta": false,
+    "logo": {
+        "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/DE_UNICREDIT/default.svg"
+    },
+    "icon": {
+        "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/DE_UNICREDIT/default.svg"
+    }
+},
+     
+{  // === BANK SEARCH: N26 === 
+    "banks": [
+        {
+            "id": 278015,
+            "name": "N26 Bank",
+            "bic": "NTSBDEB1XXX",
+            "blz": "10011001",
+            "location": "DE",
+            "city": "Berlin",
+            "isTestBank": false,
+            "popularity": 0,
+            "interfaces": [
+                {
+                    "bankingInterface": "WEB_SCRAPER",
+                    "loginCredentials": [
+                        {
+                            "label": "E-Mail-Adresse",
+                            "isSecret": false,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        },
+                        {
+                            "label": "Passwort",
+                            "isSecret": true,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        }
+                    ],
+                    "properties": [
+                        "DECOUPLED_APPROACH"
+                    ],
+                    "loginHint": "N26 verlangt teilweise die Freigabe des Logins in Ihrem verkn\u00fcpften Ger\u00e4t. Bitte halten Sie dieses zum Login bereit.",
+                    "health": 0,
+                    "lastCommunicationAttempt": "2025-12-10T21:54:00.000+01:00",
+                    "lastSuccessfulCommunication": "2025-12-10T21:37:27.000+01:00",
+                    "isAisSupported": false,
+                    "isPisSupported": false,
+                    "aisCapabilities": {
+                        "standingOrdersDownload": false,
+                        "pendingTransactionsDownload": false
+                    },
+                    "paymentCapabilities": {
+                        "sepaMoneyTransfer": false,
+                        "sepaInstantMoneyTransfer": false,
+                        "sepaFutureDatedMoneyTransfer": false,
+                        "sepaInstantFutureDatedMoneyTransfer": false,
+                        "sepaCollectiveMoneyTransfer": false,
+                        "sepaInstantCollectiveMoneyTransfer": false,
+                        "sepaFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaDirectDebit": false,
+                        "sepaStandingOrder": false,
+                        "sepaInstantStandingOrder": false,
+                        "domesticMoneyTransfer": false,
+                        "domesticInstantMoneyTransfer": false,
+                        "domesticFutureDatedMoneyTransfer": false,
+                        "domesticInstantFutureDatedMoneyTransfer": false,
+                        "domesticCollectiveMoneyTransfer": false,
+                        "domesticInstantCollectiveMoneyTransfer": false,
+                        "domesticFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticStandingOrder": false,
+                        "domesticInstantStandingOrder": false,
+                        "accountAgnosticMoneyTransfer": false
+                    },
+                    "aisAccountTypes": []
+                },
+                {
+                    "bankingInterface": "XS2A",
+                    "tppAuthenticationGroup": {
+                        "id": 33,
+                        "name": "N26 XS2A"
+                    },
+                    "loginCredentials": [],
+                    "properties": [
+                        "REDIRECT_APPROACH",
+                        "DECOUPLED_APPROACH"
+                    ],
+                    "health": 100,
+                    "lastCommunicationAttempt": "2026-04-01T14:57:07.000+02:00",
+                    "lastSuccessfulCommunication": "2026-04-01T14:57:09.000+02:00",
+                    "isAisSupported": true,
+                    "isPisSupported": true,
+                    "aisCapabilities": {
+                        "standingOrdersDownload": true,
+                        "pendingTransactionsDownload": false
+                    },
+                    "paymentCapabilities": {
+                        "sepaMoneyTransfer": true,
+                        "sepaInstantMoneyTransfer": true,
+                        "sepaFutureDatedMoneyTransfer": true,
+                        "sepaInstantFutureDatedMoneyTransfer": false,
+                        "sepaCollectiveMoneyTransfer": false,
+                        "sepaInstantCollectiveMoneyTransfer": false,
+                        "sepaFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaDirectDebit": false,
+                        "sepaStandingOrder": true,
+                        "sepaInstantStandingOrder": false,
+                        "domesticMoneyTransfer": false,
+                        "domesticInstantMoneyTransfer": false,
+                        "domesticFutureDatedMoneyTransfer": false,
+                        "domesticInstantFutureDatedMoneyTransfer": false,
+                        "domesticCollectiveMoneyTransfer": false,
+                        "domesticInstantCollectiveMoneyTransfer": false,
+                        "domesticFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticStandingOrder": false,
+                        "domesticInstantStandingOrder": false,
+                        "accountAgnosticMoneyTransfer": false
+                    },
+                    "paymentConstraints": {
+                        "sepaMoneyTransfer": {
+                            "mandatoryFields": {
+                                "counterpartName": true
+                            }
+                        }
+                    },
+                    "aisAccountTypes": [
+                        "Checking",
+                        "Savings"
+                    ]
+                }
+            ],
+            "bankGroup": {
+                "id": 26,
+                "name": "N26 Bank",
+                "logo": {
+                    "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/N26/default.svg"
+                },
+                "icon": {
+                    "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/N26/default.svg"
+                }
+            },
+            "isBeta": false,
+            "logo": {
+                "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/N26/default.svg"
+            },
+            "icon": {
+                "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/N26/default.svg"
+            }
+        }
+    ],
+    "paging": {
+        "page": 1,
+        "perPage": 3,
+        "pageCount": 1,
+        "totalCount": 1
+    }
+},
+{ 
+    "banks": [
+        {   //=== BANK SEARCH: HypoVereinsbank ===
+            "id": 26588,
+            "name": "UniCredit Bank - HypoVereinsbank",
+            "bic": "HYVEDEMMXXX",
+            "blz": "70020270",
+            "location": "DE",
+            "city": "M\u00fcnchen",
+            "isTestBank": false,
+            "popularity": 0,
+            "interfaces": [
+                {
+                    "bankingInterface": "FINTS_SERVER",
+                    "loginCredentials": [
+                        {
+                            "label": "Direct B@nking-Nummer",
+                            "isSecret": false,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        },
+                        {
+                            "label": "PIN",
+                            "isSecret": true,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        }
+                    ],
+                    "properties": [
+                        "DECOUPLED_APPROACH"
+                    ],
+                    "health": 80,
+                    "lastCommunicationAttempt": "2026-04-01T14:48:36.000+02:00",
+                    "lastSuccessfulCommunication": "2026-04-01T14:48:40.000+02:00",
+                    "isAisSupported": true,
+                    "isPisSupported": true,
+                    "aisCapabilities": {
+                        "standingOrdersDownload": false,
+                        "pendingTransactionsDownload": true
+                    },
+                    "paymentCapabilities": {
+                        "sepaMoneyTransfer": true,
+                        "sepaInstantMoneyTransfer": false,
+                        "sepaFutureDatedMoneyTransfer": true,
+                        "sepaInstantFutureDatedMoneyTransfer": false,
+                        "sepaCollectiveMoneyTransfer": true,
+                        "sepaInstantCollectiveMoneyTransfer": false,
+                        "sepaFutureDatedCollectiveMoneyTransfer": true,
+                        "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaDirectDebit": true,
+                        "sepaStandingOrder": false,
+                        "sepaInstantStandingOrder": false,
+                        "domesticMoneyTransfer": false,
+                        "domesticInstantMoneyTransfer": false,
+                        "domesticFutureDatedMoneyTransfer": false,
+                        "domesticInstantFutureDatedMoneyTransfer": false,
+                        "domesticCollectiveMoneyTransfer": false,
+                        "domesticInstantCollectiveMoneyTransfer": false,
+                        "domesticFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticStandingOrder": false,
+                        "domesticInstantStandingOrder": false,
+                        "accountAgnosticMoneyTransfer": false
+                    },
+                    "paymentConstraints": {
+                        "sepaMoneyTransfer": {
+                            "mandatoryFields": {
+                                "counterpartName": true
+                            }
+                        }
+                    },
+                    "aisAccountTypes": [
+                        "Checking",
+                        "Savings",
+                        "Security",
+                        "Loan"
+                    ]
+                },
+                {
+                    "bankingInterface": "XS2A",
+                    "loginCredentials": [
+                        {
+                            "label": "Direct B@nking-Nummer",
+                            "isSecret": false,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        },
+                        {
+                            "label": "PIN",
+                            "isSecret": true,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        }
+                    ],
+                    "properties": [
+                        "DECOUPLED_APPROACH"
+                    ],
+                    "health": 90,
+                    "lastCommunicationAttempt": "2026-04-01T14:56:14.000+02:00",
+                    "lastSuccessfulCommunication": "2026-04-01T14:56:17.000+02:00",
+                    "isAisSupported": true,
+                    "isPisSupported": true,
+                    "aisCapabilities": {
+                        "standingOrdersDownload": true,
+                        "pendingTransactionsDownload": false
+                    },
+                    "paymentCapabilities": {
+                        "sepaMoneyTransfer": true,
+                        "sepaInstantMoneyTransfer": true,
+                        "sepaFutureDatedMoneyTransfer": true,
+                        "sepaInstantFutureDatedMoneyTransfer": false,
+                        "sepaCollectiveMoneyTransfer": false,
+                        "sepaInstantCollectiveMoneyTransfer": false,
+                        "sepaFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaDirectDebit": false,
+                        "sepaStandingOrder": true,
+                        "sepaInstantStandingOrder": false,
+                        "domesticMoneyTransfer": false,
+                        "domesticInstantMoneyTransfer": false,
+                        "domesticFutureDatedMoneyTransfer": false,
+                        "domesticInstantFutureDatedMoneyTransfer": false,
+                        "domesticCollectiveMoneyTransfer": false,
+                        "domesticInstantCollectiveMoneyTransfer": false,
+                        "domesticFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticStandingOrder": false,
+                        "domesticInstantStandingOrder": false,
+                        "accountAgnosticMoneyTransfer": false
+                    },
+                    "paymentConstraints": {
+                        "sepaMoneyTransfer": {
+                            "mandatoryFields": {
+                                "counterpartName": true
+                            }
+                        }
+                    },
+                    "aisAccountTypes": [
+                        "Checking"
+                    ]
+                },
+                {
+                    "bankingInterface": "WEB_SCRAPER",
+                    "loginCredentials": [
+                        {
+                            "label": "Direct B@nking-Nummer",
+                            "isSecret": false,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        },
+                        {
+                            "label": "PIN",
+                            "isSecret": true,
+                            "isVolatile": false,
+                            "isMandatory": true
+                        }
+                    ],
+                    "properties": [
+                        "DECOUPLED_APPROACH"
+                    ],
+                    "health": 90,
+                    "lastCommunicationAttempt": "2026-04-01T14:51:08.000+02:00",
+                    "lastSuccessfulCommunication": "2026-04-01T14:51:51.000+02:00",
+                    "isAisSupported": true,
+                    "isPisSupported": false,
+                    "aisCapabilities": {
+                        "standingOrdersDownload": false,
+                        "pendingTransactionsDownload": false
+                    },
+                    "paymentCapabilities": {
+                        "sepaMoneyTransfer": false,
+                        "sepaInstantMoneyTransfer": false,
+                        "sepaFutureDatedMoneyTransfer": false,
+                        "sepaInstantFutureDatedMoneyTransfer": false,
+                        "sepaCollectiveMoneyTransfer": false,
+                        "sepaInstantCollectiveMoneyTransfer": false,
+                        "sepaFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "sepaDirectDebit": false,
+                        "sepaStandingOrder": false,
+                        "sepaInstantStandingOrder": false,
+                        "domesticMoneyTransfer": false,
+                        "domesticInstantMoneyTransfer": false,
+                        "domesticFutureDatedMoneyTransfer": false,
+                        "domesticInstantFutureDatedMoneyTransfer": false,
+                        "domesticCollectiveMoneyTransfer": false,
+                        "domesticInstantCollectiveMoneyTransfer": false,
+                        "domesticFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticInstantFutureDatedCollectiveMoneyTransfer": false,
+                        "domesticStandingOrder": false,
+                        "domesticInstantStandingOrder": false,
+                        "accountAgnosticMoneyTransfer": false
+                    },
+                    "aisAccountTypes": [
+                        "CreditCard"
+                    ]
+                }
+            ],
+            "bankGroup": {
+                "id": 16,
+                "name": "UniCredit (DE)",
+                "logo": {
+                    "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/DE_UNICREDIT/default.svg"
+                },
+                "icon": {
+                    "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/DE_UNICREDIT/default.svg"
+                }
+            },
+            "isBeta": false,
+            "logo": {
+                "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/logos/DE_UNICREDIT/default.svg"
+            },
+            "icon": {
+                "url": "https://cdn.finapi.io/assets/images/banks-2024.18.1/icons/DE_UNICREDIT/default.svg"
+            }
+        }
+    ],
+    "paging": {
+        "page": 1,
+        "perPage": 3,
+        "pageCount": 1,
+        "totalCount": 1
+    }
+}]
