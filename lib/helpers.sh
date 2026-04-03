@@ -1,10 +1,10 @@
 #!/bin/bash
 # Shared utility functions
+# All names/config come from lib/names.sh (sourced via lib/services.sh).
 
 # Derived paths (from CAL_ROOT and CAL_PROJECT, set by cal.sh)
 COMPOSE_FILE="$CAL_ROOT/infra/docker-compose.yml"
 COMPOSE_ENV="$CAL_PROJECT/.env"
-COMPOSE_PROJECT="calytics"        # fixed name — docker compose uses dir name by default, we override to stay consistent
 SEEDERS_DIR="$CAL_ROOT/seeders"
 TF_DIR="$CAL_ROOT/infra/terraform/local"
 
