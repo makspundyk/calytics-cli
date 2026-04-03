@@ -20,6 +20,7 @@ cat << 'EOF'
     cal restart <service>         Restart a single service
     cal status                    Show what's running
     cal logs <service>            Tail logs (last 80 lines + follow)
+    cal open <service>            Open service URL in browser
 
   DEPLOY (full environment orchestration)
     cal deploy                    Full setup: infra → terraform → db → seeds → services

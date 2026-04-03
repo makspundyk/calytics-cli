@@ -98,21 +98,41 @@ Running a command twice must produce the same result. Seeders delete-then-recrea
    ```
 3. Source libs are already loaded by `cal.sh` — use `info`, `ok`, `fail`, `phase`, `svc_resolve`, `SVC_*`, `$CAL_ROOT`, `$CAL_PROJECT` directly.
 4. Add tab completion in `cal.sh` `_cal_completions()` if the command has subcommands.
-5. Add to `commands/help.sh` help text.
+5. **MANDATORY**: Update `commands/help.sh` help text.
+6. **MANDATORY**: Update `README.md` with the new command.
 
 ## Adding a new service
 
 1. Edit `lib/services.sh` — add to all registries
 2. Add alias in `svc_resolve()`
-3. Test: `cal start <alias>`, `cal stop <alias>`, `cal restart <alias>`, `cal logs <alias>`, `cal status`
-4. No other files should need changes (commands iterate the registry)
+3. **MANDATORY**: Update `commands/help.sh` service aliases table.
+4. **MANDATORY**: Update `README.md` service aliases table.
+5. Test: `cal start <alias>`, `cal stop <alias>`, `cal restart <alias>`, `cal logs <alias>`, `cal status`
+6. No other files should need changes (commands iterate the registry)
 
 ## Adding a new seeder
 
 1. Create `seeders/<name>.sh` — must be self-contained (sources env vars from `$CAL_ROOT/env/defaults.sh` if needed, or receives them from the caller)
 2. Add to `commands/seed.sh` case statement
-3. Add to `commands/help.sh` seed section
-4. Add tab completion in `cal.sh`
+3. **MANDATORY**: Update `commands/help.sh` seed section.
+4. **MANDATORY**: Update `README.md` seed section.
+5. Add tab completion in `cal.sh`
+
+## MANDATORY: always update help and README
+
+**Every change** to the CLI that adds, removes, or renames a command, service, seeder, flag, or alias **MUST** also update:
+
+1. `commands/help.sh` — the main help output users see
+2. `README.md` — the documentation users read on GitHub
+3. `cal.sh` `_cal_completions()` — tab completion lists
+
+This is not optional. A command without help text is invisible. A service without a README entry doesn't exist. If you forget, `cal help` shows stale information and users lose trust in the CLI.
+
+**Checklist before committing any CLI change:**
+- [ ] `cal help` shows the new/changed command correctly
+- [ ] `README.md` documents the new/changed feature
+- [ ] Tab completion includes new subcommands/services
+- [ ] `CLAUDE.md` updated if adding a new pattern or convention
 
 ## Environment variables
 

@@ -50,7 +50,7 @@ _cal_completions() {
     COMPREPLY=($(compgen -W "$cmds" -- "$cur"))
   elif [ "$COMP_CWORD" -eq 2 ]; then
     case "$prev" in
-      start|stop|restart|logs)
+      start|stop|restart|logs|open)
         COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui all" -- "$cur"))
         ;;
       seed)

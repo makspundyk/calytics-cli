@@ -32,6 +32,7 @@ cal stop [service|all]        # Stop one or all services
 cal restart <service>         # Restart a single service
 cal status                    # Show what's running
 cal logs <service>            # Tail logs (Ctrl+C to stop)
+cal open <service>            # Open service URL in browser
 ```
 
 ### Deploy (full environment orchestration)
