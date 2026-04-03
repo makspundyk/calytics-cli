@@ -31,7 +31,7 @@ case "$target" in
 
     # Docker services (compose-managed)
     info "Starting Docker services..."
-    dc --profile app up -d 2>/dev/null
+    dc --profile app --profile docs up -d 2>/dev/null
     ok "Docker services started"
 
     # Process services
@@ -41,6 +41,9 @@ case "$target" in
       info "Starting ${SVC_LABEL[$svc]}..."
       start_process_service "$svc"
     done
+
+    # Standalone containers
+    start_docker_service "dynamo-gui"
 
     ok "All services started"
     ;;
