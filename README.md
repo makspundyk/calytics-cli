@@ -34,26 +34,43 @@ cal status                    # Show what's running
 cal logs <service>            # Tail logs (Ctrl+C to stop)
 ```
 
-### Infrastructure
+### Deploy (full environment orchestration)
+
+Sets up **everything** needed for a working local environment: infrastructure (LocalStack, Postgres), Terraform resources, database migrations, seed data, and starts services.
 
 ```bash
-cal deploy                    # Full local environment (infra + terraform + seeds + services)
-cal deploy --services-only    # Skip infra, just start services
-cal deploy --infra-only       # Just LocalStack + Postgres
-cal deploy debit-guard        # Only BE + admin
+cal deploy                    # Full setup from scratch
+cal deploy debit-guard        # Only BE + admin (skips a2a, risk, fe, docs)
+cal deploy dg                 # Same (shorthand)
 cal deploy a2a                # Only A2A + admin
+cal deploy backend            # All backends (skips fe, docs)
+cal deploy fe                 # Admin + frontend
+cal deploy full               # Everything
+cal deploy --services-only    # Skip infra (LocalStack/Postgres already running)
+cal deploy --infra-only       # Only start LocalStack + Postgres
+cal deploy --skip=a2a,rs      # Skip specific services
+cal deploy --env=sandbox      # Use sandbox naming for resources
 cal destroy                   # Tear down everything
 ```
 
-### Build
+### Build (compile code only)
+
+Compiles code **without** touching infrastructure, seeds, or services. Use after pulling changes or editing shared modules.
 
 ```bash
-cal build shared              # Sync & build shared modules (git fetch + smart build)
-cal build shims               # Build alias shims + patch pino for calytics-be
-cal build be                  # Build calytics-be
-cal build admin               # Build calytics-be-admin
-cal build a2a                 # Build calytics-a2a
+cal build shared              # Git fetch + smart branch switch + build shared modules
+cal build shims               # Build alias shims + patch pino (calytics-be local dev)
+cal build be                  # Compile calytics-be (tsup)
+cal build admin               # Compile calytics-be-admin (NestJS)
+cal build a2a                 # Compile calytics-a2a (tsc)
 ```
+
+> **When to use which?**
+> - First time / fresh machine → `cal deploy`
+> - Infrastructure already running, just pulled code → `cal build shared && cal build shims`
+> - Changed a shared module → `cal build shared`
+> - Changed `src/infrastructure/` in calytics-be → `cal build shims`
+> - Want to restart everything from scratch → `cal destroy && cal deploy`
 
 ### Seed
 
