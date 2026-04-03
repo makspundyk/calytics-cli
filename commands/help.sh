@@ -5,7 +5,7 @@ cmd="${1:-}"
 
 if [ -n "$cmd" ] && [ -f "$CAL_ROOT/commands/${cmd}.sh" ]; then
   # Show help for specific command
-  head -20 "$CAL_ROOT/commands/${cmd}.sh" | grep '^#' | sed 's/^# \?//'
+  head -20 "$CAL_ROOT/commands/${cmd}.sh" | grep '^#' | grep -v '^#!/' | sed 's/^# \?//'
   exit 0
 fi
 
