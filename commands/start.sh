@@ -13,6 +13,7 @@ case "$target" in
   infra)
     phase "Starting infrastructure"
     ensure_infra
+    ensure_shared_modules
     ;;
 
   all)
@@ -20,6 +21,7 @@ case "$target" in
 
     # Infra first
     ensure_infra
+    ensure_shared_modules
 
     # Kill leftover processes on app ports
     for svc in "${SVC_PROCESS_LIST[@]}"; do

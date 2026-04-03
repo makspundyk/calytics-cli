@@ -55,6 +55,46 @@ ensure_infra() {
   fi
 }
 
+# Ensure shared modules are built (smart: skips if dist/ is up to date)
+ensure_shared_modules() {
+  [ ! -d "$SHARED_MODULES_DIR" ] && return 0
+
+  for mod_dir in "$SHARED_MODULES_DIR"/*/; do
+    [ ! -d "$mod_dir/.git" ] && continue
+    [ ! -f "$mod_dir/package.json" ] && continue
+    grep -q '"build"' "$mod_dir/package.json" 2>/dev/null || continue
+
+    mod_name=$(basename "$mod_dir")
+
+    # Find dist/ (root or workspace packages)
+    dist_dir="$mod_dir/dist"
+    if [ ! -d "$dist_dir" ] && [ -d "$mod_dir/packages" ]; then
+      dist_dir=$(find "$mod_dir/packages" -maxdepth 2 -name "dist" -type d | head -1)
+    fi
+
+    # No dist/ → must build
+    if [ -z "$dist_dir" ] || [ ! -d "$dist_dir" ]; then
+      info "$mod_name — building (no dist/)..."
+      (cd "$mod_dir" && npm install --silent 2>/dev/null && npm run build 2>&1 | tail -3)
+      ok "$mod_name built"
+      continue
+    fi
+
+    # Check if source is newer than dist/
+    build_marker="$dist_dir/index.js"
+    [ ! -f "$build_marker" ] && build_marker="$dist_dir/index.d.ts"
+    [ ! -f "$build_marker" ] && build_marker=$(find "$dist_dir" -name "*.js" -type f | head -1)
+    [ -z "$build_marker" ] && continue
+
+    newer_src=$(find "$mod_dir/src" "$mod_dir/packages" -name "*.ts" -not -name "*.d.ts" -newer "$build_marker" 2>/dev/null | head -1)
+    if [ -n "$newer_src" ]; then
+      info "$mod_name — rebuilding (source changed)..."
+      (cd "$mod_dir" && npm install --silent 2>/dev/null && npm run build 2>&1 | tail -3)
+      ok "$mod_name rebuilt"
+    fi
+  done
+}
+
 # Check if a service needs infrastructure
 svc_needs_infra() {
   for dep in "${SVC_INFRA_DEPENDENT[@]}"; do
