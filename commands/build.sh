@@ -104,6 +104,18 @@ case "$target" in
     ok "$label built"
     ;;
 
+  docs)
+    phase "Building API docs (pulling latest redocly/redoc)"
+    dc --profile docs build --pull 2>&1 | tail -5
+    # Restart if already running
+    if container_is_running "${SVC_CONTAINER[docs]}"; then
+      dc --profile docs up -d --force-recreate 2>/dev/null
+      ok "API docs rebuilt and restarted"
+    else
+      ok "API docs image rebuilt (run: cal start docs)"
+    fi
+    ;;
+
   *)
     fail "Unknown build target: $target (try: shared, shims, be, admin, a2a)"
     ;;

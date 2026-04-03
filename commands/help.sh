@@ -43,6 +43,7 @@ cat << 'EOF'
     cal build be                  Compile calytics-be (tsup)
     cal build admin               Compile calytics-be-admin (NestJS)
     cal build a2a                 Compile calytics-a2a (tsc)
+    cal build docs                Pull latest redocly image + rebuild docs
 
   SEED
     cal seed all                  Run all seeders in order

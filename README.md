@@ -64,6 +64,7 @@ cal build shims               # Build alias shims + patch pino (calytics-be loca
 cal build be                  # Compile calytics-be (tsup)
 cal build admin               # Compile calytics-be-admin (NestJS)
 cal build a2a                 # Compile calytics-a2a (tsc)
+cal build docs                # Pull latest redocly image + rebuild API docs
 ```
 
 > **When to use which?**
