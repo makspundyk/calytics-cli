@@ -25,22 +25,28 @@ echo -e "  ${BOLD}Services${NC}"
 for svc in "${SVC_ALL_LIST[@]}"; do
   label=$(printf "%-20s" "${SVC_LABEL[$svc]}")
   port="${SVC_PORT[$svc]}"
+  url="${SVC_URL[$svc]:-}"
+  is_running=false
 
   if svc_is_docker "$svc"; then
     container="${SVC_CONTAINER[$svc]}"
-    if container_is_running "$container"; then
-      echo -e "    $label ${GREEN}running${NC}  :$port"
-    else
-      echo -e "    $label ${RED}stopped${NC}"
-    fi
+    container_is_running "$container" && is_running=true
   elif svc_is_process "$svc"; then
     if [ "$port" -gt 0 ] && port_is_busy "$port"; then
-      echo -e "    $label ${GREEN}running${NC}  :$port"
+      is_running=true
     elif [ "$port" -eq 0 ] && pgrep -f "${SVC_DIR[$svc]}" &>/dev/null; then
-      echo -e "    $label ${GREEN}running${NC}"
-    else
-      echo -e "    $label ${RED}stopped${NC}"
+      is_running=true
     fi
+  fi
+
+  if [ "$is_running" = true ]; then
+    if [ -n "$url" ]; then
+      echo -e "    $label ${GREEN}running${NC}  ${CYAN}${url}${NC}"
+    else
+      echo -e "    $label ${GREEN}running${NC}"
+    fi
+  else
+    echo -e "    $label ${RED}stopped${NC}"
   fi
 done
 echo ""

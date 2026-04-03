@@ -8,7 +8,8 @@ INFRA_POSTGRES_PORT=5432
 INFRA_LOCALSTACK_CONTAINER="localstack_main"
 INFRA_POSTGRES_CONTAINER="calytics_postgres"
 
-# ── Log directory ────────────────────────────────────────────────
+# ── Network ──────────────────────────────────────────────────────
+LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 LOG_DIR="/tmp"
 
 # ── Ports ────────────────────────────────────────────────────────
@@ -63,6 +64,17 @@ declare -A SVC_LABEL=(
   [fe]="calytics-fe"
   [docs]="API docs"
   [dynamo-gui]="DynamoDB GUI"
+)
+
+# ── Service URLs (fe uses LAN IP for WSL browser access) ─────────
+declare -A SVC_URL=(
+  [be]="http://localhost:3333"
+  [a2a]="http://localhost:3000"
+  [rs]=""
+  [admin]="http://localhost:9000"
+  [fe]="http://$LOCAL_IP:5000"
+  [docs]="http://localhost:8080"
+  [dynamo-gui]="http://localhost:8001"
 )
 
 # ── Categorization ───────────────────────────────────────────────

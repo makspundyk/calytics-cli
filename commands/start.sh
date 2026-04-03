@@ -45,7 +45,9 @@ case "$target" in
     # Standalone containers
     start_docker_service "dynamo-gui"
 
-    ok "All services started"
+    # Show status
+    echo ""
+    source "$CAL_ROOT/commands/status.sh"
     ;;
 
   *)
