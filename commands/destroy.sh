@@ -14,9 +14,11 @@ if [ -d "$TF_DIR/.terraform" ]; then
 fi
 
 info "Killing service processes..."
-for port in 9000 5000 3333 3000 4566; do
-  kill_port "$port"
+for svc in "${SVC_ALL_LIST[@]}"; do
+  port="${SVC_PORT[$svc]}"
+  [ "$port" -gt 0 ] && kill_port "$port"
 done
-pgrep -f "calytics-risk-scoring" 2>/dev/null | xargs kill -9 2>/dev/null || true
+kill_port "$INFRA_LOCALSTACK_PORT"
+pgrep -f "${SVC_DIR[rs]}" 2>/dev/null | xargs kill -9 2>/dev/null || true
 
 ok "Environment destroyed"

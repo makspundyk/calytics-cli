@@ -86,31 +86,22 @@ case "$target" in
 
   shims)
     phase "Building alias shims + patching pino"
-    shim_script="$CAL_PROJECT/calytics-be/scripts/build-local-alias-shims.sh"
+    be_dir="$(svc_path be)"
+    shim_script="$be_dir/scripts/build-local-alias-shims.sh"
     [ ! -f "$shim_script" ] && fail "Shim script not found: $shim_script"
-    (cd "$CAL_PROJECT/calytics-be" && bash "$shim_script")
+    (cd "$be_dir" && bash "$shim_script")
     ;;
 
-  be)
-    phase "Building calytics-be"
-    (cd "$CAL_PROJECT/calytics-be" && npm run build 2>&1 | tail -5)
-    ok "calytics-be built"
-    ;;
-
-  admin)
-    phase "Building calytics-be-admin"
-    admin_dir="$CAL_PROJECT/calytics-be-admin/dist"
-    if [ -d "$admin_dir" ]; then
-      sudo rm -rf "$admin_dir" 2>/dev/null || rm -rf "$admin_dir"
+  be|admin|a2a)
+    svc_dir="$(svc_path "$target")"
+    label="${SVC_LABEL[$target]}"
+    phase "Building $label"
+    if [ "$target" = "admin" ]; then
+      dist_dir="$svc_dir/dist"
+      [ -d "$dist_dir" ] && { sudo rm -rf "$dist_dir" 2>/dev/null || rm -rf "$dist_dir"; }
     fi
-    (cd "$CAL_PROJECT/calytics-be-admin" && npm run build 2>&1 | tail -5)
-    ok "calytics-be-admin built"
-    ;;
-
-  a2a)
-    phase "Building calytics-a2a"
-    (cd "$CAL_PROJECT/calytics-a2a" && npm run build 2>&1 | tail -5)
-    ok "calytics-a2a built"
+    (cd "$svc_dir" && npm run build 2>&1 | tail -5)
+    ok "$label built"
     ;;
 
   *)

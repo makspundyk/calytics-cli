@@ -229,16 +229,20 @@ fi
 # ══════════════════════════════════════════════════════════════════
 phase "8/8  Git authors"
 
+AUTHOR_NAME="Maksym Pundyk"
+AUTHOR_EMAIL_COMPANY="m.pundyk@calytics.io"
+AUTHOR_EMAIL_CLI="maksym.p@ideainyou.com"
+
 for repo_dir in "$PROJECT_DIR"/*/; do
   [ ! -d "$repo_dir/.git" ] && continue
   repo_name=$(basename "$repo_dir")
 
   if [ "$repo_name" = "$CLI_DIRNAME" ]; then
-    (cd "$repo_dir" && git config user.name "Maksym Pundyk" && git config user.email "maksym.p@ideainyou.com")
-    ok "$repo_name → maksym.p@ideainyou.com"
+    (cd "$repo_dir" && git config user.name "$AUTHOR_NAME" && git config user.email "$AUTHOR_EMAIL_CLI")
+    ok "$repo_name → $AUTHOR_EMAIL_CLI"
   else
-    (cd "$repo_dir" && git config user.name "Maksym Pundyk" && git config user.email "m.pundyk@calytics.io")
-    ok "$repo_name → m.pundyk@calytics.io"
+    (cd "$repo_dir" && git config user.name "$AUTHOR_NAME" && git config user.email "$AUTHOR_EMAIL_COMPANY")
+    ok "$repo_name → $AUTHOR_EMAIL_COMPANY"
   fi
 done
 
@@ -246,8 +250,8 @@ if [ -d "$PROJECT_DIR/calytics-shared-modules" ]; then
   for mod_dir in "$PROJECT_DIR/calytics-shared-modules"/*/; do
     [ ! -d "$mod_dir/.git" ] && continue
     mod_name=$(basename "$mod_dir")
-    (cd "$mod_dir" && git config user.name "Maksym Pundyk" && git config user.email "m.pundyk@calytics.io")
-    ok "shared/$mod_name → m.pundyk@calytics.io"
+    (cd "$mod_dir" && git config user.name "$AUTHOR_NAME" && git config user.email "$AUTHOR_EMAIL_COMPANY")
+    ok "shared/$mod_name → $AUTHOR_EMAIL_COMPANY"
   done
 fi
 

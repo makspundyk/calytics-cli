@@ -8,13 +8,13 @@ echo ""
 
 # Infrastructure
 echo -e "  ${BOLD}Infrastructure${NC}"
-if container_is_running "localstack_main"; then
-  echo -e "    LocalStack      ${GREEN}running${NC}  :4566"
+if container_is_running "$INFRA_LOCALSTACK_CONTAINER"; then
+  echo -e "    LocalStack      ${GREEN}running${NC}  :${INFRA_LOCALSTACK_PORT}"
 else
   echo -e "    LocalStack      ${RED}stopped${NC}"
 fi
-if container_is_running "calytics_postgres"; then
-  echo -e "    PostgreSQL      ${GREEN}running${NC}  :5432"
+if container_is_running "$INFRA_POSTGRES_CONTAINER"; then
+  echo -e "    PostgreSQL      ${GREEN}running${NC}  :${INFRA_POSTGRES_PORT}"
 else
   echo -e "    PostgreSQL      ${RED}stopped${NC}"
 fi
@@ -47,6 +47,6 @@ echo ""
 
 # Credentials
 echo -e "  ${BOLD}Credentials${NC}"
-echo -e "    Client:  main.client@gmail.com / ClientSecret123!"
-echo -e "    Admin:   app.admin@gmail.com / AdminSecret123!"
+echo -e "    Client:  $CRED_CLIENT_EMAIL / $CRED_CLIENT_PASS"
+echo -e "    Admin:   $CRED_ADMIN_EMAIL / $CRED_ADMIN_PASS"
 echo ""

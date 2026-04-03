@@ -1,7 +1,17 @@
 #!/bin/bash
 # Service registry — single source of truth for all service metadata
+# Every script uses these vars. Change here → changes everywhere.
 
-# Ports
+# ── Infrastructure ───────────────────────────────────────────────
+INFRA_LOCALSTACK_PORT=4566
+INFRA_POSTGRES_PORT=5432
+INFRA_LOCALSTACK_CONTAINER="localstack_main"
+INFRA_POSTGRES_CONTAINER="calytics_postgres"
+
+# ── Log directory ────────────────────────────────────────────────
+LOG_DIR="/tmp"
+
+# ── Ports ────────────────────────────────────────────────────────
 declare -A SVC_PORT=(
   [be]=3333
   [a2a]=3000
@@ -11,7 +21,7 @@ declare -A SVC_PORT=(
   [docs]=8080
 )
 
-# Project directories (relative to CAL_PROJECT)
+# ── Project directories (relative to CAL_PROJECT) ────────────────
 declare -A SVC_DIR=(
   [be]=calytics-be
   [a2a]=calytics-a2a
@@ -21,28 +31,28 @@ declare -A SVC_DIR=(
   [docs]=client-openapi-docs
 )
 
-# Docker container names (only for docker-managed services)
+# ── Docker container names (docker-managed services) ─────────────
 declare -A SVC_CONTAINER=(
   [admin]=calytics_be_admin
   [fe]=calytics_fe
   [docs]=calytics_docs
 )
 
-# Start commands (only for process-managed services)
+# ── Start commands (process-managed services) ────────────────────
 declare -A SVC_START=(
   [be]="npm run offline:local"
   [a2a]="npm run offline:local"
   [rs]="npm run stream:dev"
 )
 
-# Log files (only for process-managed services)
+# ── Log files (derived from LOG_DIR + SVC_DIR) ───────────────────
 declare -A SVC_LOG=(
-  [be]=/tmp/calytics-be.log
-  [a2a]=/tmp/calytics-a2a.log
-  [rs]=/tmp/calytics-risk-scoring.log
+  [be]="$LOG_DIR/calytics-be.log"
+  [a2a]="$LOG_DIR/calytics-a2a.log"
+  [rs]="$LOG_DIR/calytics-risk-scoring.log"
 )
 
-# Human-readable names
+# ── Human-readable labels ────────────────────────────────────────
 declare -A SVC_LABEL=(
   [be]="calytics-be"
   [a2a]="calytics-a2a"
@@ -52,12 +62,23 @@ declare -A SVC_LABEL=(
   [docs]="API docs"
 )
 
-# Categorization
+# ── Categorization ───────────────────────────────────────────────
 SVC_PROCESS_LIST=(be a2a rs)       # started as background Node processes
 SVC_DOCKER_LIST=(admin fe docs)    # started as Docker containers
 SVC_ALL_LIST=(be a2a rs admin fe docs)
 
-# Resolve alias → canonical name
+# ── Git author config ────────────────────────────────────────────
+GIT_AUTHOR_NAME="Maksym Pundyk"
+GIT_AUTHOR_EMAIL_COMPANY="m.pundyk@calytics.io"
+GIT_AUTHOR_EMAIL_CLI="maksym.p@ideainyou.com"
+
+# ── Credentials (display only) ───────────────────────────────────
+CRED_CLIENT_EMAIL="main.client@gmail.com"
+CRED_CLIENT_PASS="ClientSecret123!"
+CRED_ADMIN_EMAIL="app.admin@gmail.com"
+CRED_ADMIN_PASS="AdminSecret123!"
+
+# ── Helper: resolve alias → canonical name ───────────────────────
 svc_resolve() {
   case "$1" in
     be|debit-guard|dg|backend) echo "be" ;;
@@ -70,12 +91,9 @@ svc_resolve() {
   esac
 }
 
-# Check if a service is docker-managed
-svc_is_docker() {
-  [[ -n "${SVC_CONTAINER[$1]:-}" ]]
-}
+# ── Helper: service type checks ──────────────────────────────────
+svc_is_docker()  { [[ -n "${SVC_CONTAINER[$1]:-}" ]]; }
+svc_is_process() { [[ -n "${SVC_START[$1]:-}" ]]; }
 
-# Check if a service is process-managed
-svc_is_process() {
-  [[ -n "${SVC_START[$1]:-}" ]]
-}
+# ── Helper: get full path to service directory ───────────────────
+svc_path() { echo "$CAL_PROJECT/${SVC_DIR[$1]}"; }
