@@ -77,6 +77,9 @@ cat << 'EOF'
     cal sync qonto                Sync Qonto prod credentials → LocalStack
     cal sync terraform            Sync Terraform configs from dev environment
 
+  DAILY
+    cal morning                   Fetch repos + system check + start everything
+
   SETUP
     cal install                   Install all system deps + register CLI
     cal system-check              Full diagnostic (tools, env, consistency)

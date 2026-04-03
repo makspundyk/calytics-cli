@@ -122,10 +122,10 @@ cal sync qonto                # Sync Qonto production credentials to local
 cal sync terraform            # Sync Terraform configs from dev environment
 ```
 
-### Tools
+### Daily
 
 ```bash
-cal dynamo-gui                # Start DynamoDB admin web UI (:8001)
+cal morning                   # Fetch repos + system check + start everything
 ```
 
 ## Service Aliases
