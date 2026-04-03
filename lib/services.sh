@@ -66,9 +66,11 @@ declare -A SVC_LABEL=(
 )
 
 # ── Categorization ───────────────────────────────────────────────
-SVC_PROCESS_LIST=(be a2a rs)       # started as background Node processes
+SVC_PROCESS_LIST=(be a2a rs)                # started as background Node processes
 SVC_DOCKER_LIST=(admin fe docs dynamo-gui)  # started as Docker containers
 SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui)
+SVC_INFRA_DEPENDENT=(be a2a rs admin fe)    # need LocalStack + Postgres to run
+SVC_INDEPENDENT=(docs dynamo-gui)           # can run without infra
 
 # ── Git author config ────────────────────────────────────────────
 GIT_AUTHOR_NAME="Maksym Pundyk"

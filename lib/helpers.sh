@@ -12,6 +12,57 @@ dc() {
   docker compose -f "$COMPOSE_FILE" --env-file "$COMPOSE_ENV" -p "$COMPOSE_PROJECT" "$@"
 }
 
+# Check if infrastructure is running
+infra_is_running() {
+  container_is_running "$INFRA_LOCALSTACK_CONTAINER" && container_is_running "$INFRA_POSTGRES_CONTAINER"
+}
+
+# Ensure infrastructure is running — start it if not
+ensure_infra() {
+  if infra_is_running; then
+    return 0
+  fi
+
+  info "Infrastructure not running — starting..."
+  docker start "$INFRA_LOCALSTACK_CONTAINER" 2>/dev/null || dc up -d localstack postgres 2>/dev/null
+  docker start "$INFRA_POSTGRES_CONTAINER" 2>/dev/null || true
+
+  # Wait for LocalStack
+  for i in $(seq 1 30); do
+    if curl -sf "http://localhost:${INFRA_LOCALSTACK_PORT}/_localstack/health" 2>/dev/null | grep -q '"dynamodb"'; then
+      break
+    fi
+    [ "$i" -eq 30 ] && { warn "LocalStack may still be starting"; return 1; }
+    sleep 1
+  done
+  ok "LocalStack ready"
+
+  # Wait for Postgres
+  for i in $(seq 1 15); do
+    if docker exec "$INFRA_POSTGRES_CONTAINER" pg_isready -U postgres -d calytics-admin -q 2>/dev/null; then
+      break
+    fi
+    sleep 1
+  done
+  ok "PostgreSQL ready"
+
+  # Re-seed SQS queues if lost
+  if ! aws --endpoint-url="http://localhost:${INFRA_LOCALSTACK_PORT}" sqs get-queue-url \
+       --queue-name "calytics-be-local-data-enrichment.fifo" --region "$AWS_REGION" &>/dev/null; then
+    warn "SQS queues lost — re-seeding..."
+    bash "$SEEDERS_DIR/queues.sh" 2>&1 | tail -3
+    ok "SQS queues re-seeded"
+  fi
+}
+
+# Check if a service needs infrastructure
+svc_needs_infra() {
+  for dep in "${SVC_INFRA_DEPENDENT[@]}"; do
+    [ "$dep" = "$1" ] && return 0
+  done
+  return 1
+}
+
 # Wait for a port to become available (up to $2 seconds, default 30)
 wait_for_port() {
   local port="$1" timeout="${2:-30}"

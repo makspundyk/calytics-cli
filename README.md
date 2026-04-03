@@ -27,15 +27,21 @@ cal install
 ### Services
 
 ```bash
-cal start [service|all]       # Start one or all services
-cal stop [service|all]        # Stop app services (keeps infra)
-cal stop infra                # Stop LocalStack + Postgres (data preserved)
-cal stop everything           # Stop all + infrastructure
+cal start                     # Start all (infra + services)
+cal start infra               # Start just LocalStack + Postgres
+cal start <service>           # Start one (auto-starts infra if needed)
+cal stop                      # Stop everything (services + infra)
+cal stop services             # Stop app services only (keep infra)
+cal stop <service>            # Stop one service
 cal restart <service>         # Restart a single service
 cal status                    # Show what's running
 cal logs <service>            # Tail logs (Ctrl+C to stop)
 cal open <service>            # Open service URL in browser
 ```
+
+> **Infra dependency:** `be`, `a2a`, `rs`, `admin`, `fe` need LocalStack + Postgres.
+> Starting any of them auto-starts infra if it's down.
+> `docs` and `dynamo-gui` are independent.
 
 ### Deploy (full environment orchestration)
 
