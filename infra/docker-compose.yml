@@ -111,7 +111,38 @@ services:
     networks:
       - calytics-net
 
+  # ── Developer tools (profile: tools) ───────────────────────────
+  dynamo-gui:
+    image: aaronshaf/dynamodb-admin
+    container_name: dynamodb-gui
+    ports:
+      - "8001:8001"
+    environment:
+      DYNAMO_ENDPOINT: http://localstack:4566
+      AWS_REGION: eu-central-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      localstack:
+        condition: service_healthy
+    profiles: ["tools"]
+    networks:
+      - calytics-net
+
+  webhook-tester:
+    image: ghcr.io/tarampampam/webhook-tester:2
+    container_name: calytics-webhook-tester
+    command: start --port 8080 --storage-driver fs --fs-storage-dir /data --auto-create-sessions --max-requests 0
+    ports:
+      - "8090:8080"
+    volumes:
+      - webhook_data:/data
+    profiles: ["tools"]
+    networks:
+      - calytics-net
+
 volumes:
+  webhook_data:
   localstack_data:
   pg_data:
 

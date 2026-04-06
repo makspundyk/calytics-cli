@@ -5,7 +5,7 @@
 phase "Destroying local environment"
 
 info "Stopping Docker containers..."
-dc --profile app --profile docs down -v 2>/dev/null || true
+dc --profile app --profile docs --profile tools down -v 2>/dev/null || true
 
 if [ -d "$TF_DIR/.terraform" ]; then
   info "Destroying Terraform resources..."

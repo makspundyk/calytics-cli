@@ -196,55 +196,32 @@ start_docker_service() {
     return
   fi
 
-  # Standalone containers (not in docker-compose)
+  # Map service alias to compose service name
+  compose_name=""
   case "$svc" in
-    dynamo-gui)
-      docker run -d --rm \
-        --name "$container" \
-        -p "$port:8001" \
-        -e DYNAMO_ENDPOINT="http://host.docker.internal:${INFRA_LOCALSTACK_PORT}" \
-        -e AWS_REGION="$AWS_REGION" \
-        -e AWS_ACCESS_KEY_ID=test \
-        -e AWS_SECRET_ACCESS_KEY=test \
-        aaronshaf/dynamodb-admin &>/dev/null
-      ok "$label started on :$port"
-      return
-      ;;
-    webhooks)
-      mkdir -p "$WEBHOOK_DATA_DIR" && chmod 777 "$WEBHOOK_DATA_DIR"
-      docker run -d --rm \
-        --name "$container" \
-        -p "$port:8080/tcp" \
-        -v "$WEBHOOK_DATA_DIR:/data" \
-        "$WEBHOOK_IMAGE" \
-        start \
-        --port 8080 \
-        --storage-driver fs \
-        --fs-storage-dir /data \
-        --auto-create-sessions \
-        --max-requests 0 &>/dev/null
-      ok "$label started on :$port  ${DIM}(data: $WEBHOOK_DATA_DIR)${NC}"
-      # Wait for API to be ready, then seed webhook URLs into the database
-      for i in $(seq 1 10); do
-        curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
-        sleep 1
-      done
-      info "Seeding webhook URLs for main client..."
-      run_seeder "$SEEDER_WEBHOOKS" 2>&1 | tail -3
-      ok "Webhook URLs seeded into database"
-      return
-      ;;
+    admin)     compose_name="be-admin" ;;
+    fe)        compose_name="fe" ;;
+    docs)      compose_name="docs" ;;
+    dynamo-gui) compose_name="dynamo-gui" ;;
+    webhooks)  compose_name="webhook-tester" ;;
   esac
 
-  # Compose-managed containers
-  dc --profile app --profile docs up -d "$(
-    case "$svc" in
-      admin) echo "be-admin" ;;
-      fe)    echo "fe" ;;
-      docs)  echo "docs" ;;
-    esac
+  # Start via compose (all profiles so any service can be targeted)
+  dc --profile app --profile docs --profile tools up -d "$(
+    echo "$compose_name"
   )" 2>/dev/null
   ok "$label started"
+
+  # Post-start: seed webhook URLs into the database
+  if [ "$svc" = "webhooks" ]; then
+    for i in $(seq 1 10); do
+      curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
+      sleep 1
+    done
+    info "Seeding webhook URLs for main client..."
+    run_seeder "$SEEDER_WEBHOOKS" 2>&1 | tail -3
+    ok "Webhook URLs seeded"
+  fi
 }
 
 # Stop a process-managed service

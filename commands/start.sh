@@ -29,10 +29,19 @@ case "$target" in
       [ "$port" -gt 0 ] && kill_port "$port"
     done
 
-    # Docker services (compose-managed)
+    # Docker services (all compose profiles)
     info "Starting Docker services..."
-    dc --profile app --profile docs up -d 2>/dev/null
+    dc --profile app --profile docs --profile tools up -d 2>/dev/null
     ok "Docker services started"
+
+    # Post-start: seed webhook URLs (webhook-tester is now running)
+    for i in $(seq 1 10); do
+      curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
+      sleep 1
+    done
+    info "Seeding webhook URLs..."
+    run_seeder "$SEEDER_WEBHOOKS" 2>&1 | tail -3
+    ok "Webhook URLs seeded"
 
     # Process services
     for svc in "${SVC_PROCESS_LIST[@]}"; do
@@ -41,10 +50,6 @@ case "$target" in
       info "Starting ${SVC_LABEL[$svc]}..."
       start_process_service "$svc"
     done
-
-    # Standalone containers
-    start_docker_service "dynamo-gui"
-    start_docker_service "webhooks"
 
     # Show status
     echo ""
