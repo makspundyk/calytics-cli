@@ -93,6 +93,7 @@ cat << 'EOF'
     fe          calytics-fe             :5000
     docs        API docs                :8080
     dynamo-gui  DynamoDB admin web UI   :8001
+    webhooks    Webhook tester (UI)    :8090
 
   DEPLOY vs BUILD
     deploy = infrastructure + terraform + database + seeds + start services

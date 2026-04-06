@@ -138,6 +138,25 @@ cal morning                   # Fetch repos + system check + start everything
 | `admin` | calytics-be-admin | 9000 |
 | `fe` | calytics-fe | 5000 |
 | `docs` | API docs | 8080 |
+| `dynamo-gui` | DynamoDB admin | 8001 |
+| `webhooks` | Webhook tester (UI + file persistence) | 8090 |
+
+### Webhook Tester
+
+Local alternative to webhook.site. Payloads saved to `/tmp/calytics-webhooks/` (LLM-readable).
+
+Each product has a stable webhook endpoint:
+- **DebitGuard:** `http://localhost:8090/11111111-1111-1111-1111-111111111111`
+- **OwnershipCheck:** `http://localhost:8090/22222222-2222-2222-2222-222222222222`
+- **A2A + CC:** `http://localhost:8090/33333333-3333-3333-3333-333333333333`
+
+`cal seed webhooks` auto-configures these URLs in the database. Open `cal open webhooks` for the web UI.
+
+For remote testing (e.g. development env → local): use ngrok to expose the webhook port:
+```bash
+ngrok http 8090
+# Then set the ngrok URL in the admin UI for the development environment
+```
 
 ## Credentials
 

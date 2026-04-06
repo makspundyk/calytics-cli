@@ -117,7 +117,7 @@ print_info "Step 4 & 5: Creating webhooks and secrets"
 # Webhook 1: Local - A2A & CC (A2A + CalyticsCollect events)
 WEBHOOK_1_ID="5e11e707-a3f1-4799-a356-27727fb5aade"
 WEBHOOK_1_LABEL="Local - A2A & CC"
-WEBHOOK_1_CALLBACK_URL="https://webhook-test.com/4aba0f16c738ea2f882f3da77c3d9d3e"
+WEBHOOK_1_CALLBACK_URL="${WEBHOOK_URL_A2A:-http://localhost:8090/33333333-3333-3333-3333-333333333333}"
 WEBHOOK_1_SIGNING_SECRET="6b2935e5f69390f9064f3f975a2a21ddd3a823b0a213a03a25d909812acc405b"
 # Events: A2APaymentFinalized, CalyticsCollect SessionAccountsReady/SessionFailed, MandateCreated/MandateDeactivated (backend dotted format)
 WEBHOOK_1_EVENTS=(
@@ -173,7 +173,7 @@ print_success "Created webhook 1: $WEBHOOK_1_LABEL (ID: $WEBHOOK_1_ID)"
 # Webhook 2: Local - DG
 WEBHOOK_2_ID="b5b021a7-1158-46e3-b1a7-efdf631d8acf"
 WEBHOOK_2_LABEL="Local - DG"
-WEBHOOK_2_CALLBACK_URL="https://webhook-test.com/17438064aebe3fc88fdd2905eb5fb0fd"
+WEBHOOK_2_CALLBACK_URL="${WEBHOOK_URL_DG:-http://localhost:8090/11111111-1111-1111-1111-111111111111}"
 WEBHOOK_2_SIGNING_SECRET="63ae00862273a7d993632621d7b320aad61d753d0ec51940a454c4a87dded9d3"
 WEBHOOK_2_EVENTS="debit_guard.verification_completed"
 WEBHOOK_2_SECRET_VALUE="24ed3398a46196e78d1818b77ee0a4dd512ef44ba6236a75e094154c89d5907e"
@@ -219,7 +219,7 @@ print_success "Created webhook 2: $WEBHOOK_2_LABEL (ID: $WEBHOOK_2_ID)"
 # Webhook 3: Local - OC
 WEBHOOK_3_ID="4b36cba2-d575-4b69-b185-01d1fd8aacbf"
 WEBHOOK_3_LABEL="Local - OC"
-WEBHOOK_3_CALLBACK_URL="https://webhook-test.com/6767f568bcbe01826d527de522d24e2b"
+WEBHOOK_3_CALLBACK_URL="${WEBHOOK_URL_OC:-http://localhost:8090/22222222-2222-2222-2222-222222222222}"
 WEBHOOK_3_SIGNING_SECRET="ed33c2d722b8163ea353441b8d4fe2ebed65e158828d26dd66a351e646612711"
 WEBHOOK_3_EVENTS="ownership_check.verification_completed"
 WEBHOOK_3_SECRET_VALUE="05d3d93b00fb992b5ada893e345b5b6971a8fe908dff70020d3c255a5d91a6d4"

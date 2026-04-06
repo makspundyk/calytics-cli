@@ -36,6 +36,7 @@ declare -A SVC_PORT=(
   [fe]=5000
   [docs]=8080
   [dynamo-gui]=8001
+  [webhooks]=8090
 )
 
 # ── Service directories (relative to project root) ───────────────
@@ -54,6 +55,7 @@ declare -A SVC_CONTAINER=(
   [fe]=calytics_fe
   [docs]=calytics_docs
   [dynamo-gui]=dynamodb-gui
+  [webhooks]=calytics-webhook-tester
 )
 
 # ── Start commands ───────────────────────────────────────────────
@@ -79,6 +81,7 @@ declare -A SVC_LABEL=(
   [fe]="calytics-fe"
   [docs]="API docs"
   [dynamo-gui]="DynamoDB GUI"
+  [webhooks]="Webhook Tester"
 )
 
 # ── Service URLs ─────────────────────────────────────────────────
@@ -90,14 +93,15 @@ declare -A SVC_URL=(
   [fe]="http://$LOCAL_IP:${SVC_PORT[fe]}"
   [docs]="http://localhost:${SVC_PORT[docs]}"
   [dynamo-gui]="http://localhost:${SVC_PORT[dynamo-gui]}"
+  [webhooks]="http://localhost:${SVC_PORT[webhooks]}"
 )
 
 # ── Service categorization ───────────────────────────────────────
 SVC_PROCESS_LIST=(be a2a rs)
-SVC_DOCKER_LIST=(admin fe docs dynamo-gui)
-SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui)
+SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks)
+SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui webhooks)
 SVC_INFRA_DEPENDENT=(be a2a rs admin fe)
-SVC_INDEPENDENT=(docs dynamo-gui)
+SVC_INDEPENDENT=(docs dynamo-gui webhooks)
 
 # ── DynamoDB table names ─────────────────────────────────────────
 # BE tables
@@ -155,6 +159,21 @@ SECRET_QONTO_CREDS="calytics/qonto/credentials"
 SECRET_QONTO_STATIC="calytics/qonto/static-credentials"
 SECRET_BRIGHT_DATA="calytics/local/bright-data/credentials"
 SECRET_BRIGHT_DATA_PROD="calytics/prod/bright-data/credentials"
+
+# ── Webhook Tester ────────────────────────────────────────────────
+WEBHOOK_IMAGE="ghcr.io/tarampampam/webhook-tester:2"
+WEBHOOK_DATA_DIR="/tmp/calytics-webhooks"
+# Pre-defined session UUIDs — each product gets a stable endpoint URL
+WEBHOOK_SESSION_DG="11111111-1111-1111-1111-111111111111"
+WEBHOOK_SESSION_OC="22222222-2222-2222-2222-222222222222"
+WEBHOOK_SESSION_A2A="33333333-3333-3333-3333-333333333333"
+WEBHOOK_SESSION_CC="44444444-4444-4444-4444-444444444444"
+# Derived callback URLs (used in webhook seeder)
+WEBHOOK_BASE_URL="http://localhost:${SVC_PORT[webhooks]}"
+WEBHOOK_URL_DG="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_DG}"
+WEBHOOK_URL_OC="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_OC}"
+WEBHOOK_URL_A2A="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_A2A}"
+WEBHOOK_URL_CC="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_CC}"
 
 # ── S3 bucket names ──────────────────────────────────────────────
 S3_ADMIN_BUCKET="calytics-be-${STAGE}-admin"

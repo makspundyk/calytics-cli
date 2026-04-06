@@ -16,6 +16,7 @@ svc_resolve() {
     fe|frontend)               echo "fe" ;;
     docs)                      echo "docs" ;;
     dynamo-gui|dynamo|dg-ui)   echo "dynamo-gui" ;;
+    webhooks|webhook|wh)       echo "webhooks" ;;
     *) return 1 ;;
   esac
 }

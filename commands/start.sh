@@ -44,6 +44,7 @@ case "$target" in
 
     # Standalone containers
     start_docker_service "dynamo-gui"
+    start_docker_service "webhooks"
 
     # Show status
     echo ""

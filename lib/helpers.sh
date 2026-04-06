@@ -210,6 +210,22 @@ start_docker_service() {
       ok "$label started on :$port"
       return
       ;;
+    webhooks)
+      mkdir -p "$WEBHOOK_DATA_DIR" && chmod 777 "$WEBHOOK_DATA_DIR"
+      docker run -d --rm \
+        --name "$container" \
+        -p "$port:8080/tcp" \
+        -v "$WEBHOOK_DATA_DIR:/data" \
+        "$WEBHOOK_IMAGE" \
+        start \
+        --port 8080 \
+        --storage-driver fs \
+        --fs-storage-dir /data \
+        --auto-create-sessions \
+        --max-requests 0 &>/dev/null
+      ok "$label started on :$port  ${DIM}(data: $WEBHOOK_DATA_DIR)${NC}"
+      return
+      ;;
   esac
 
   # Compose-managed containers
