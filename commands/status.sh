@@ -1,7 +1,92 @@
 #!/bin/bash
-# cal status
-# Show the state of all services, infrastructure, and ports.
+# cal status [service]
+# Show the state of all services or detailed info for one service.
+#
+# Examples:
+#   cal status            Show all services, infra, webhooks, credentials
+#   cal status be         Detailed status for calytics-be
+#   cal status webhooks   Webhook tester sessions + request counts
 
+target="${1:-}"
+
+# ── Helper: check if a service is running ────────────────────────
+_svc_running() {
+  svc="$1"
+  if svc_is_docker "$svc"; then
+    container_is_running "${SVC_CONTAINER[$svc]}"
+  elif svc_is_process "$svc"; then
+    port="${SVC_PORT[$svc]}"
+    if [ "$port" -gt 0 ]; then
+      port_is_busy "$port"
+    else
+      pgrep -f "${SVC_DIR[$svc]}" &>/dev/null
+    fi
+  fi
+}
+
+# ── Single service status ────────────────────────────────────────
+if [ -n "$target" ]; then
+  svc=$(svc_resolve "$target") || fail "Unknown service: $target"
+  label="${SVC_LABEL[$svc]}"
+  port="${SVC_PORT[$svc]}"
+  url="${SVC_URL[$svc]:-}"
+
+  echo ""
+  echo -e "  ${BOLD}$label${NC}"
+  echo ""
+
+  if _svc_running "$svc"; then
+    echo -e "  Status:     ${GREEN}running${NC}"
+  else
+    echo -e "  Status:     ${RED}stopped${NC}"
+  fi
+
+  [ "$port" -gt 0 ] && echo -e "  Port:       :$port"
+  [ -n "$url" ] && echo -e "  URL:        ${CYAN}$url${NC}"
+
+  # Service dir
+  dir_name="${SVC_DIR[$svc]:-}"
+  [ -n "$dir_name" ] && echo -e "  Directory:  $dir_name/"
+
+  # Container or PID
+  if svc_is_docker "$svc"; then
+    container="${SVC_CONTAINER[$svc]}"
+    echo -e "  Container:  $container"
+    if container_is_running "$container"; then
+      uptime=$(docker inspect --format='{{.State.StartedAt}}' "$container" 2>/dev/null | cut -dT -f1,2 | tr T ' ')
+      echo -e "  Started:    $uptime"
+    fi
+  elif svc_is_process "$svc"; then
+    log="${SVC_LOG[$svc]:-}"
+    [ -n "$log" ] && echo -e "  Log:        $log"
+  fi
+
+  # Webhook-specific: show sessions + request counts
+  if [ "$svc" = "webhooks" ] && _svc_running "$svc"; then
+    echo ""
+    echo -e "  ${BOLD}Sessions${NC}"
+    echo -e "    DebitGuard:       ${CYAN}${WEBHOOK_URL_DG}${NC}"
+    echo -e "    OwnershipCheck:   ${CYAN}${WEBHOOK_URL_OC}${NC}"
+    echo -e "    A2A + CC:         ${CYAN}${WEBHOOK_URL_A2A}${NC}"
+    echo ""
+    echo -e "  ${BOLD}Requests received${NC}"
+    for session_name in "DG:$WEBHOOK_SESSION_DG" "OC:$WEBHOOK_SESSION_OC" "A2A:$WEBHOOK_SESSION_A2A"; do
+      name="${session_name%%:*}"
+      uuid="${session_name##*:}"
+      count=$(find "$WEBHOOK_DATA_DIR/$uuid" -name "request.*.json" 2>/dev/null | wc -l)
+      echo -e "    $name: $count requests"
+    done
+    echo ""
+    echo -e "  ${BOLD}Data directory${NC}"
+    echo -e "    $WEBHOOK_DATA_DIR/"
+    echo -e "    ${DIM}(files readable by LLM / scripts)${NC}"
+  fi
+
+  echo ""
+  exit 0
+fi
+
+# ── Full status (no argument) ────────────────────────────────────
 echo ""
 echo -e "${BOLD}  Calytics Local Environment${NC}"
 echo ""
@@ -24,22 +109,9 @@ echo ""
 echo -e "  ${BOLD}Services${NC}"
 for svc in "${SVC_ALL_LIST[@]}"; do
   label=$(printf "%-20s" "${SVC_LABEL[$svc]}")
-  port="${SVC_PORT[$svc]}"
   url="${SVC_URL[$svc]:-}"
-  is_running=false
 
-  if svc_is_docker "$svc"; then
-    container="${SVC_CONTAINER[$svc]}"
-    container_is_running "$container" && is_running=true
-  elif svc_is_process "$svc"; then
-    if [ "$port" -gt 0 ] && port_is_busy "$port"; then
-      is_running=true
-    elif [ "$port" -eq 0 ] && pgrep -f "${SVC_DIR[$svc]}" &>/dev/null; then
-      is_running=true
-    fi
-  fi
-
-  if [ "$is_running" = true ]; then
+  if _svc_running "$svc"; then
     if [ -n "$url" ]; then
       echo -e "    $label ${GREEN}running${NC}  ${CYAN}${url}${NC}"
     else
@@ -50,6 +122,16 @@ for svc in "${SVC_ALL_LIST[@]}"; do
   fi
 done
 echo ""
+
+# Webhooks summary (if running)
+if _svc_running "webhooks"; then
+  echo -e "  ${BOLD}Webhook Endpoints${NC}"
+  echo -e "    DG:   ${CYAN}${WEBHOOK_URL_DG}${NC}"
+  echo -e "    OC:   ${CYAN}${WEBHOOK_URL_OC}${NC}"
+  echo -e "    A2A:  ${CYAN}${WEBHOOK_URL_A2A}${NC}"
+  echo -e "    UI:   ${CYAN}${WEBHOOK_BASE_URL}${NC}"
+  echo ""
+fi
 
 # Credentials
 echo -e "  ${BOLD}Credentials${NC}"
