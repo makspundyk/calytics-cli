@@ -219,12 +219,12 @@ SEEDER_PLANS="plans"
 SEEDER_API_KEYS="api-keys"
 SEEDER_A2A_TABLES="a2a-tables"
 
+# Ordered list for `cal seed all` — webhooks excluded (auto-seeded by cal start webhooks)
 SEEDER_ALL_LIST=(
   "$SEEDER_SECRETS"
   "$SEEDER_QUEUES"
   "$SEEDER_SES"
   "$SEEDER_CLIENT"
-  "$SEEDER_WEBHOOKS"
   "$SEEDER_PLANS"
   "$SEEDER_API_KEYS"
 )
