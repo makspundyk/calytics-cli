@@ -244,9 +244,32 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# 8. Git authors
+# 8. Pre-pull Docker images (so first `cal start` is fast)
 # ══════════════════════════════════════════════════════════════════
-phase "8/8  Git authors"
+phase "8/9  Docker images"
+
+IMAGES=(
+  "ghcr.io/tarampampam/webhook-tester:2"
+  "aaronshaf/dynamodb-admin"
+  "localstack/localstack:3.8"
+  "postgres:16-alpine"
+  "redocly/redoc:latest"
+)
+
+for img in "${IMAGES[@]}"; do
+  if docker image inspect "$img" &>/dev/null; then
+    ok "$img cached"
+  else
+    info "Pulling $img..."
+    docker pull "$img" 2>&1 | tail -1
+    ok "$img pulled"
+  fi
+done
+
+# ══════════════════════════════════════════════════════════════════
+# 9. Git authors
+# ══════════════════════════════════════════════════════════════════
+phase "9/9  Git authors"
 
 AUTHOR_NAME="Maksym Pundyk"
 AUTHOR_EMAIL_COMPANY="m.pundyk@calytics.io"

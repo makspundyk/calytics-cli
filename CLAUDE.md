@@ -2,6 +2,19 @@
 
 This is a **multi-user CLI SDK** for managing the Calytics local development environment. It is sourced into `~/.bashrc` and runs on different machines, usernames, and directory layouts. Every decision must account for portability.
 
+## Core principle: FULLY AUTONOMOUS
+
+**A teammate with a fresh laptop runs `bash commands/install.sh` and gets a working environment. No extra manual steps. Ever.**
+
+If any command requires the user to "also run X" or "first install Y" — that's a bug in the CLI, not a missing step in the docs. Every dependency, Docker image, env file, permission, and config must be handled automatically by `cal install` or by the command that needs it.
+
+When adding new features:
+- New Docker image? → Add it to the pre-pull list in `install.sh` step 8
+- New system tool? → Add it to the package check in `install.sh` step 2
+- New env var? → Add default to `env/defaults.sh`
+- New service? → Must work with `cal start <name>` immediately after `cal install`
+- New seeder? → Must be included in `cal seed all` and run during `cal deploy`
+
 ## Architecture
 
 ```

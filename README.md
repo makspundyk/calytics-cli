@@ -2,24 +2,31 @@
 
 One command to manage the entire local development environment.
 
-## First-time install (fresh Linux)
+> **Design principle:** Everything must be fully autonomous. A teammate with a fresh laptop runs ONE command and gets a working environment. No extra manual steps, no "also run this", no "don't forget to install X". If `cal install` doesn't cover it, it's a bug.
+
+## First-time install (fresh laptop)
 
 ```bash
 bash ~/projects/calytics/calytics-cli/commands/install.sh
 ```
 
-This installs everything (git, docker, node 22, aws cli, terraform, serverless, ngrok, claude-code), fixes permissions, sets git authors, and registers `cal` in your shell. After it finishes, `cal` is ready — no restart needed.
+This single command:
+- Registers `cal` in your shell (available immediately, no restart)
+- Creates `.env` and `.env.local` if missing (auto-detects WSL IP)
+- Installs: git, curl, jq, docker, node 22, aws cli, terraform, serverless, ngrok, claude-code
+- Pre-pulls Docker images (LocalStack, Postgres, webhook-tester, DynamoDB GUI, Redocly)
+- Fixes file permissions across all repos
+- Configures git author for every repo
+
+After install:
+```bash
+cal morning    # fetch repos + system check + start everything
+```
 
 ## Already installed
 
 ```bash
-source ~/.bashrc       # or open a new terminal
-cal help
-```
-
-Re-run install anytime to pick up missing tools:
-```bash
-cal install
+cal install    # re-run anytime — skips what's already present
 ```
 
 ## Commands
