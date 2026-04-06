@@ -163,17 +163,29 @@ SECRET_BRIGHT_DATA_PROD="calytics/prod/bright-data/credentials"
 # ── Webhook Tester ────────────────────────────────────────────────
 WEBHOOK_IMAGE="ghcr.io/tarampampam/webhook-tester:2"
 WEBHOOK_DATA_DIR="/tmp/calytics-webhooks"
-# Pre-defined session UUIDs — each product gets a stable endpoint URL
-WEBHOOK_SESSION_DG="11111111-1111-1111-1111-111111111111"
-WEBHOOK_SESSION_OC="22222222-2222-2222-2222-222222222222"
-WEBHOOK_SESSION_A2A="33333333-3333-3333-3333-333333333333"
-WEBHOOK_SESSION_CC="44444444-4444-4444-4444-444444444444"
-# Derived callback URLs (used in webhook seeder)
+WEBHOOK_STATE_FILE="$WEBHOOK_DATA_DIR/.sessions.env"
 WEBHOOK_BASE_URL="http://localhost:${SVC_PORT[webhooks]}"
-WEBHOOK_URL_DG="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_DG}"
-WEBHOOK_URL_OC="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_OC}"
-WEBHOOK_URL_A2A="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_A2A}"
-WEBHOOK_URL_CC="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_CC}"
+
+# Product labels for webhook sessions
+WEBHOOK_PRODUCTS=(dg oc a2a)
+declare -A WEBHOOK_PRODUCT_LABEL=( [dg]="DebitGuard" [oc]="OwnershipCheck" [a2a]="A2A + CC" )
+
+# Load session UUIDs from state file (created by `cal seed webhooks`)
+# If file doesn't exist yet, variables are empty — seeder creates them.
+WEBHOOK_SESSION_DG=""
+WEBHOOK_SESSION_OC=""
+WEBHOOK_SESSION_A2A=""
+if [ -f "$WEBHOOK_STATE_FILE" ]; then
+  source "$WEBHOOK_STATE_FILE"
+fi
+
+# Derived URLs (empty if sessions not created yet)
+WEBHOOK_URL_DG="${WEBHOOK_SESSION_DG:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_DG}}"
+WEBHOOK_URL_OC="${WEBHOOK_SESSION_OC:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_OC}}"
+WEBHOOK_URL_A2A="${WEBHOOK_SESSION_A2A:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_A2A}}"
+WEBHOOK_UI_DG="${WEBHOOK_SESSION_DG:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_DG}}"
+WEBHOOK_UI_OC="${WEBHOOK_SESSION_OC:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_OC}}"
+WEBHOOK_UI_A2A="${WEBHOOK_SESSION_A2A:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_A2A}}"
 
 # ── S3 bucket names ──────────────────────────────────────────────
 S3_ADMIN_BUCKET="calytics-be-${STAGE}-admin"

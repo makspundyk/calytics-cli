@@ -49,24 +49,29 @@ _open() {
 
 # Webhooks: resolve product to session URL
 if [ "$svc" = "webhooks" ]; then
+  if [ -z "$WEBHOOK_SESSION_DG" ]; then
+    warn "Webhook sessions not created yet. Run: cal seed webhooks"
+    _open "$url"
+    exit 0
+  fi
+
   case "$product" in
     dg|debit-guard)
-      _open "$url/s/$WEBHOOK_SESSION_DG"
+      _open "$WEBHOOK_UI_DG"
       ;;
     oc|ownership-check)
-      _open "$url/s/$WEBHOOK_SESSION_OC"
+      _open "$WEBHOOK_UI_OC"
       ;;
     a2a|cc|collect)
-      _open "$url/s/$WEBHOOK_SESSION_A2A"
+      _open "$WEBHOOK_UI_A2A"
       ;;
     "")
-      # No product — show all + open dashboard
       echo ""
       echo -e "  ${BOLD}Webhook Tester Sessions${NC}"
       echo ""
-      echo -e "  ${CYAN}DebitGuard:${NC}       $url/s/$WEBHOOK_SESSION_DG"
-      echo -e "  ${CYAN}OwnershipCheck:${NC}   $url/s/$WEBHOOK_SESSION_OC"
-      echo -e "  ${CYAN}A2A + CC:${NC}         $url/s/$WEBHOOK_SESSION_A2A"
+      echo -e "  ${CYAN}DebitGuard:${NC}       $WEBHOOK_UI_DG"
+      echo -e "  ${CYAN}OwnershipCheck:${NC}   $WEBHOOK_UI_OC"
+      echo -e "  ${CYAN}A2A + CC:${NC}         $WEBHOOK_UI_A2A"
       echo ""
       _open "$url"
       ;;

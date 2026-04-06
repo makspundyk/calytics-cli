@@ -65,9 +65,9 @@ if [ -n "$target" ]; then
   if [ "$svc" = "webhooks" ] && _svc_running "$svc"; then
     echo ""
     echo -e "  ${BOLD}Sessions${NC}"
-    echo -e "    DebitGuard:       ${CYAN}${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_DG}${NC}"
-    echo -e "    OwnershipCheck:   ${CYAN}${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_OC}${NC}"
-    echo -e "    A2A + CC:         ${CYAN}${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_A2A}${NC}"
+    echo -e "    DebitGuard:       ${CYAN}${WEBHOOK_UI_DG:-not created}${NC}"
+    echo -e "    OwnershipCheck:   ${CYAN}${WEBHOOK_UI_OC:-not created}${NC}"
+    echo -e "    A2A + CC:         ${CYAN}${WEBHOOK_UI_A2A:-not created}${NC}"
     echo ""
     echo -e "  ${BOLD}Requests received${NC}"
     for session_name in "DG:$WEBHOOK_SESSION_DG" "OC:$WEBHOOK_SESSION_OC" "A2A:$WEBHOOK_SESSION_A2A"; do
@@ -126,9 +126,9 @@ echo ""
 # Webhooks summary (if running)
 if _svc_running "webhooks"; then
   echo -e "  ${BOLD}Webhook Endpoints${NC}"
-  echo -e "    DG:   ${CYAN}${WEBHOOK_URL_DG}${NC}"
-  echo -e "    OC:   ${CYAN}${WEBHOOK_URL_OC}${NC}"
-  echo -e "    A2A:  ${CYAN}${WEBHOOK_URL_A2A}${NC}"
+  echo -e "    DG:   ${CYAN}${WEBHOOK_URL_DG:-not created}${NC}"
+  echo -e "    OC:   ${CYAN}${WEBHOOK_URL_OC:-not created}${NC}"
+  echo -e "    A2A:  ${CYAN}${WEBHOOK_URL_A2A:-not created}${NC}"
   echo -e "    UI:   ${CYAN}${WEBHOOK_BASE_URL}${NC}"
   echo ""
 fi
