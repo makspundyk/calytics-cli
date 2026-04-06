@@ -279,3 +279,15 @@ aws --endpoint-url="$AWS_ENDPOINT_URL" \
 
 print_success "Seeder completed successfully! All webhooks and API settings have been deleted and recreated."
 
+# Pre-create webhook tester sessions (ping each URL so they appear in the UI)
+WEBHOOK_BASE="${WEBHOOK_BASE_URL:-http://localhost:8090}"
+for session in \
+  "${WEBHOOK_SESSION_DG:-11111111-1111-1111-1111-111111111111}" \
+  "${WEBHOOK_SESSION_OC:-22222222-2222-2222-2222-222222222222}" \
+  "${WEBHOOK_SESSION_A2A:-33333333-3333-3333-3333-333333333333}"; do
+  curl -sf -X POST "$WEBHOOK_BASE/$session" \
+    -H "Content-Type: application/json" \
+    -d '{"_init":"session created by cal seed webhooks"}' &>/dev/null || true
+done
+print_success "Webhook tester sessions initialized"
+

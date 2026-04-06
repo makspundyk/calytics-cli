@@ -30,6 +30,27 @@ elif command -v open &>/dev/null; then
 elif command -v explorer.exe &>/dev/null; then
   opener="explorer.exe"
 else
+  opener=""
+fi
+
+# Special handling for webhooks — show all session URLs
+if [ "$svc" = "webhooks" ]; then
+  echo ""
+  echo -e "  ${BOLD}Webhook Tester Sessions${NC}"
+  echo ""
+  echo -e "  ${CYAN}DebitGuard:${NC}       $url/#/$WEBHOOK_SESSION_DG"
+  echo -e "  ${CYAN}OwnershipCheck:${NC}   $url/#/$WEBHOOK_SESSION_OC"
+  echo -e "  ${CYAN}A2A + CC:${NC}         $url/#/$WEBHOOK_SESSION_A2A"
+  echo ""
+  echo -e "  ${DIM}Dashboard:${NC}        $url"
+  echo ""
+  if [ -n "$opener" ]; then
+    $opener "$url" 2>/dev/null &
+  fi
+  exit 0
+fi
+
+if [ -z "$opener" ]; then
   info "$label → $url"
   warn "No browser opener found — copy the URL manually"
   exit 0
