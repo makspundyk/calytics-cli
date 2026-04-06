@@ -224,6 +224,14 @@ start_docker_service() {
         --auto-create-sessions \
         --max-requests 0 &>/dev/null
       ok "$label started on :$port  ${DIM}(data: $WEBHOOK_DATA_DIR)${NC}"
+      # Wait for API to be ready, then seed webhook URLs into the database
+      for i in $(seq 1 10); do
+        curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
+        sleep 1
+      done
+      info "Seeding webhook URLs for main client..."
+      run_seeder "$SEEDER_WEBHOOKS" 2>&1 | tail -3
+      ok "Webhook URLs seeded into database"
       return
       ;;
   esac
