@@ -20,34 +20,32 @@ infra_is_running() {
 
 # Ensure infrastructure is running — start it if not
 ensure_infra() {
-  if infra_is_running; then
-    return 0
+  if ! infra_is_running; then
+    info "Infrastructure not running — starting..."
+    docker start "$INFRA_LOCALSTACK_CONTAINER" 2>/dev/null || dc up -d localstack postgres 2>/dev/null
+    docker start "$INFRA_POSTGRES_CONTAINER" 2>/dev/null || true
+
+    # Wait for LocalStack
+    for i in $(seq 1 30); do
+      if curl -sf "http://localhost:${INFRA_LOCALSTACK_PORT}/_localstack/health" 2>/dev/null | grep -q '"dynamodb"'; then
+        break
+      fi
+      [ "$i" -eq 30 ] && { warn "LocalStack may still be starting"; return 1; }
+      sleep 1
+    done
+    ok "LocalStack ready"
+
+    # Wait for Postgres
+    for i in $(seq 1 15); do
+      if docker exec "$INFRA_POSTGRES_CONTAINER" pg_isready -U postgres -d calytics-admin -q 2>/dev/null; then
+        break
+      fi
+      sleep 1
+    done
+    ok "PostgreSQL ready"
   fi
 
-  info "Infrastructure not running — starting..."
-  docker start "$INFRA_LOCALSTACK_CONTAINER" 2>/dev/null || dc up -d localstack postgres 2>/dev/null
-  docker start "$INFRA_POSTGRES_CONTAINER" 2>/dev/null || true
-
-  # Wait for LocalStack
-  for i in $(seq 1 30); do
-    if curl -sf "http://localhost:${INFRA_LOCALSTACK_PORT}/_localstack/health" 2>/dev/null | grep -q '"dynamodb"'; then
-      break
-    fi
-    [ "$i" -eq 30 ] && { warn "LocalStack may still be starting"; return 1; }
-    sleep 1
-  done
-  ok "LocalStack ready"
-
-  # Wait for Postgres
-  for i in $(seq 1 15); do
-    if docker exec "$INFRA_POSTGRES_CONTAINER" pg_isready -U postgres -d calytics-admin -q 2>/dev/null; then
-      break
-    fi
-    sleep 1
-  done
-  ok "PostgreSQL ready"
-
-  # Re-seed LocalStack resources that don't survive restarts
+  # Verify LocalStack resources exist (ephemeral — can disappear while container stays up)
   LS="http://localhost:${INFRA_LOCALSTACK_PORT}"
 
   # SQS queues
