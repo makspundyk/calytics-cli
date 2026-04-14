@@ -75,7 +75,7 @@ _cal_completions() {
         COMPREPLY=($(compgen -W "finapi qonto terraform" -- "$cur"))
         ;;
       rs)
-        COMPREPLY=($(compgen -W "stream" -- "$cur"))
+        COMPREPLY=($(compgen -W "stream api" -- "$cur"))
         ;;
       deploy)
         COMPREPLY=($(compgen -W "--services-only --infra-only --skip= --env=" -- "$cur"))

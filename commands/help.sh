@@ -79,12 +79,12 @@ cat << 'EOF'
     cal sync terraform            Sync Terraform configs from dev environment
 
   RISK SCORING
-    cal rs stream dev                     Subscribe to development DG stream → score locally
-    cal rs stream sandbox                 Subscribe to sandbox DG stream → score locally
-    cal rs stream dev --source a2a        A2A payments stream
-    cal rs stream dev --source disputes   Disputes stream (dispute-recognition)
-    cal rs stream dev --source all        DG + A2A + Disputes streams (parallel)
-    cal rs stream dev --history           Read from oldest available (TRIM_HORIZON)
+    cal rs stream dev             Subscribe to development DG stream → score locally
+    cal rs stream sandbox         Subscribe to sandbox DG stream → score locally
+    cal rs stream dev --source a2a   A2A payments stream
+    cal rs stream dev --source all   Both DG + A2A streams (parallel)
+    cal rs stream dev --history      Read from oldest available (TRIM_HORIZON)
+    cal rs api                    Run local query API on :4002 (used by be-admin SDK)
 
   DAILY
     cal morning                   Fetch repos + system check + start everything

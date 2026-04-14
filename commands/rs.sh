@@ -4,35 +4,79 @@
 #
 # Subcommands:
 #   cal rs stream <env> [flags]   Subscribe to remote DDB Stream → score locally
+#   cal rs api                    Run local HTTP API (query endpoints) on :$RS_API_PORT
 #
 # Stream flags:
-#   --source dg|a2a|disputes|all  Which stream (default: dg)
+#   --source dg|a2a|all           Which stream (default: dg)
 #   --history                     Read from oldest available (TRIM_HORIZON)
 #
 # Examples:
-#   cal rs stream dev                       DG verifications, live (LATEST)
-#   cal rs stream dev --history             From oldest available records
-#   cal rs stream sandbox                   DG verifications on sandbox
-#   cal rs stream dev --source a2a          A2A payments stream
-#   cal rs stream dev --source disputes     Disputes stream (dispute-recognition)
-#   cal rs stream dev --source all          DG + A2A + Disputes streams (parallel)
+#   cal rs stream dev                  DG verifications, live (LATEST)
+#   cal rs stream dev --history        From oldest available records
+#   cal rs stream sandbox              DG verifications on sandbox
+#   cal rs stream dev --source a2a     A2A payments stream
+#   cal rs stream dev --source all     Both DG + A2A streams (parallel)
+#   cal rs api                         Boot local query API (used by be-admin SDK)
 #
 # Prerequisites:
-#   - AWS credentials (aws sso login or ~/.aws/credentials)
+#   - AWS credentials (aws sso login or ~/.aws/credentials)  [stream only]
 #   - LocalStack running (cal start infra)
 #   - RS tables created (cal migrate dynamo)
 
 subcmd="${1:-}"
 shift 2>/dev/null || true
-[ -z "$subcmd" ] && fail "Usage: cal rs <stream>"
+[ -z "$subcmd" ] && fail "Usage: cal rs <stream|api>"
 
 case "$subcmd" in
-  stream) ;; # handled below
-  *) fail "Unknown subcommand: $subcmd (available: stream)" ;;
+  stream|api) ;; # handled below
+  *) fail "Unknown subcommand: $subcmd (available: stream, api)" ;;
 esac
 
 # ═══════════════════════════════════════════════════════════════════════════
-# cal rs stream <env> [--source dg|a2a|disputes|all] [--history]
+# cal rs api — local HTTP API for query endpoints (getScore, batch, history, reputation)
+# ═══════════════════════════════════════════════════════════════════════════
+
+if [ "$subcmd" = "api" ]; then
+  phase "Risk Scoring local API"
+
+  rs_dir="$(svc_path rs)"
+  [ ! -d "$rs_dir" ] && fail "Risk scoring repo not found: $rs_dir"
+
+  info "Checking LocalStack..."
+  container_is_running "$INFRA_LOCALSTACK_CONTAINER" || \
+    fail "LocalStack not running. Start with: cal start infra"
+  ok "LocalStack running"
+
+  info "Checking RS tables..."
+  for table in "${RS_LOCAL_TABLES[@]}"; do
+    AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+      aws --endpoint-url="$LOCALSTACK_ENDPOINT" dynamodb describe-table \
+      --table-name "$table" --region "$AWS_REGION" &>/dev/null \
+      || fail "Missing table: $table. Run: cal migrate dynamo"
+  done
+  ok "RS tables present"
+
+  # Free port if busy
+  port_is_busy "$RS_API_PORT" && { warn "Port $RS_API_PORT busy — killing"; kill_port "$RS_API_PORT"; }
+
+  # Env for the handlers — they talk to LocalStack
+  export AWS_ENDPOINT_URL="$LOCALSTACK_ENDPOINT"
+  export AWS_ACCESS_KEY_ID=test
+  export AWS_SECRET_ACCESS_KEY=test
+  export AWS_REGION="$AWS_REGION"
+  export RISK_SCORING_IBAN_REPUTATION_TABLE_NAME="$TABLE_RS_IBAN_REPUTATION"
+  export RISK_SCORING_CURRENT_SCORES_TABLE_NAME="$TABLE_RS_CURRENT_SCORES"
+  export RISK_SCORING_SCORE_HISTORY_TABLE_NAME="$TABLE_RS_SCORE_HISTORY"
+  export RISK_SCORING_VELOCITY_TABLE_NAME="$TABLE_RS_VELOCITY"
+  export STAGE="$STAGE"
+  export PORT="$RS_API_PORT"
+
+  info "Starting RS API on :$RS_API_PORT — Ctrl+C to stop"
+  exec bash -c "cd '$rs_dir' && npm run --silent api:local"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# cal rs stream <env> [--source dg|a2a|all] [--history]
 # ═══════════════════════════════════════════════════════════════════════════
 
 env=""
@@ -41,21 +85,21 @@ mode="LATEST"
 
 for arg in "$@"; do
   case "$arg" in
-    dev|development)     env="dev" ;;
-    sandbox)             env="sandbox" ;;
-    --source)            : ;; # value handled by positional dg|a2a|disputes|all
-    --source=*)          source_type="${arg#--source=}" ;;
-    --history)           mode="TRIM_HORIZON" ;;
-    dg|a2a|disputes|all) source_type="$arg" ;;
-    *)                   fail "Unknown argument: $arg" ;;
+    dev|development) env="dev" ;;
+    sandbox)         env="sandbox" ;;
+    --source)        : ;; # value handled by positional dg|a2a|all
+    --source=*)      source_type="${arg#--source=}" ;;
+    --history)       mode="TRIM_HORIZON" ;;
+    dg|a2a|all)      source_type="$arg" ;;
+    *)               fail "Unknown argument: $arg" ;;
   esac
 done
 
-[ -z "$env" ] && fail "Usage: cal rs stream <dev|sandbox> [--source dg|a2a|disputes|all] [--history]"
+[ -z "$env" ] && fail "Usage: cal rs stream <dev|sandbox> [--source dg|a2a|all] [--history]"
 
 case "$source_type" in
-  dg|a2a|disputes|all) ;;
-  *) fail "Invalid source: $source_type (use: dg, a2a, disputes, all)" ;;
+  dg|a2a|all) ;;
+  *) fail "Invalid source: $source_type (use: dg, a2a, all)" ;;
 esac
 
 # ── Preflight checks ───────────────────────────────────────────────────────
@@ -133,15 +177,6 @@ if [ "$source_type" = "a2a" ] || [ "$source_type" = "all" ]; then
   ok "A2A stream: ${a2a_arn##*/stream/}"
   sources+=("a2a")
   arns+=("$a2a_arn")
-fi
-
-if [ "$source_type" = "disputes" ] || [ "$source_type" = "all" ]; then
-  disputes_table="${STREAM_DISPUTES_TABLE[$env]}"
-  info "Resolving Disputes stream ARN ($disputes_table)..."
-  disputes_arn=$(resolve_stream_arn "$disputes_table") || fail "Stream not found on $disputes_table. Is DDB Streams enabled?"
-  ok "Disputes stream: ${disputes_arn##*/stream/}"
-  sources+=("disputes")
-  arns+=("$disputes_arn")
 fi
 
 # ── Launch subscriber(s) ───────────────────────────────────────────────────

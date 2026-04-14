@@ -244,10 +244,6 @@ declare -A STREAM_PAYMENTS_TABLE=(
   [dev]="calytics-a2a-development-payments"
   [sandbox]="calytics-a2a-sandbox-payments"
 )
-declare -A STREAM_DISPUTES_TABLE=(
-  [dev]="dispute-recognition-development-disputed-transactions"
-  [sandbox]="dispute-recognition-sandbox-disputed-transactions"
-)
 
 # RS LocalStack table names (for preflight check)
 RS_LOCAL_TABLES=(
@@ -256,6 +252,10 @@ RS_LOCAL_TABLES=(
   "$TABLE_RS_SCORE_HISTORY"
   "$TABLE_RS_VELOCITY"
 )
+
+# RS local HTTP API (query endpoints) — spun up by `cal rs api`
+RS_API_PORT=4002
+RS_API_URL="http://localhost:${RS_API_PORT}"
 
 # ── Canary resources (checked after LocalStack restart) ──────────
 # Kept as a scalar for backwards compatibility; the list below is authoritative.

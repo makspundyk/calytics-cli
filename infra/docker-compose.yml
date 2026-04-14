@@ -52,6 +52,8 @@ services:
     build:
       context: ../../calytics-be-admin
       target: development
+      args:
+        GITLAB_NPM_TOKEN: ${GITLAB_NPM_TOKEN}
     container_name: calytics_be_admin
     command: npm run start:dev
     env_file:
@@ -65,6 +67,11 @@ services:
       POSTGRES_PASSWORD: register
       POSTGRES_NAME: calytics-admin
       AWS_ENDPOINT: http://localstack:4566
+      # Risk Scoring local API runs on the host (cal rs api → :4002)
+      RISK_SCORING_API_BASE_URL: ${RISK_SCORING_API_BASE_URL:-http://host.docker.internal:4002}
+      RISK_SCORING_API_TIMEOUT_MS: ${RISK_SCORING_API_TIMEOUT_MS:-5000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9000:9000"
     depends_on:
