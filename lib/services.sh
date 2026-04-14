@@ -41,3 +41,13 @@ svc_needs_infra() {
   done
   return 1
 }
+
+# ── Serverless framework check ───────────────────────────────────
+# True if the service's start command uses Serverless Framework v4,
+# which makes the process vulnerable to api.serverless.com timeouts.
+svc_uses_serverless() {
+  for s in "${SVC_USES_SERVERLESS[@]}"; do
+    [ "$s" = "$1" ] && return 0
+  done
+  return 1
+}

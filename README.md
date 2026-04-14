@@ -114,6 +114,23 @@ cal migrate revert --all      # Revert all migrations
 cal migrate dynamo            # Run DynamoDB migrations
 ```
 
+### Risk Scoring
+
+Subscribe to a remote DynamoDB Stream and run the risk-scoring pipeline locally. Reads real events from development/sandbox, scores them through the engine, writes results to LocalStack.
+
+```bash
+cal rs stream dev                          # DG verifications, live (new records only)
+cal rs stream dev --history                # DG verifications, from oldest available
+cal rs stream sandbox                      # DG verifications on sandbox
+cal rs stream dev --source a2a             # A2A payments stream
+cal rs stream dev --source disputes        # Disputes stream (dispute-recognition)
+cal rs stream dev --source all             # DG + A2A + Disputes (parallel)
+```
+
+> **Prerequisites:** AWS credentials (`aws sso login`), LocalStack running (`cal start infra`), RS tables migrated (`cal migrate dynamo`).
+>
+> **Why no `local`?** LocalStack doesn't support DDB Streams cross-service. The subscriber always reads from real AWS and writes to local LocalStack.
+
 ### Git (across all repos)
 
 ```bash

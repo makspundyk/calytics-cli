@@ -62,7 +62,7 @@ declare -A SVC_CONTAINER=(
 declare -A SVC_START=(
   [be]="npm run offline:local"
   [a2a]="npm run offline:local"
-  [rs]="npm run stream:dev"
+  [rs]="npm run stream"
 )
 
 # ── Log files ────────────────────────────────────────────────────
@@ -102,6 +102,11 @@ SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks)
 SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui webhooks)
 SVC_INFRA_DEPENDENT=(be a2a rs admin fe)
 SVC_INDEPENDENT=(docs dynamo-gui webhooks)
+
+# Services whose start command invokes Serverless Framework v4, which phones
+# home to api.serverless.com on every run. `start_process_service` uses this
+# to auto-retry when the license-check fetch fails with ETIMEDOUT.
+SVC_USES_SERVERLESS=(be a2a rs)
 
 # ── DynamoDB table names ─────────────────────────────────────────
 # BE tables
@@ -229,6 +234,37 @@ SEEDER_ALL_LIST=(
   "$SEEDER_API_KEYS"
 )
 
+# ── Stream subscriber (remote env → local scoring) ──────────────
+# Table name patterns per remote environment (for dynamic ARN lookup)
+declare -A STREAM_VERIFICATIONS_TABLE=(
+  [dev]="calytics-be-development-verifications"
+  [sandbox]="calytics-be-sandbox-verifications"
+)
+declare -A STREAM_PAYMENTS_TABLE=(
+  [dev]="calytics-a2a-development-payments"
+  [sandbox]="calytics-a2a-sandbox-payments"
+)
+declare -A STREAM_DISPUTES_TABLE=(
+  [dev]="dispute-recognition-development-disputed-transactions"
+  [sandbox]="dispute-recognition-sandbox-disputed-transactions"
+)
+
+# RS LocalStack table names (for preflight check)
+RS_LOCAL_TABLES=(
+  "$TABLE_RS_IBAN_REPUTATION"
+  "$TABLE_RS_CURRENT_SCORES"
+  "$TABLE_RS_SCORE_HISTORY"
+  "$TABLE_RS_VELOCITY"
+)
+
 # ── Canary resources (checked after LocalStack restart) ──────────
+# Kept as a scalar for backwards compatibility; the list below is authoritative.
 CANARY_SQS_QUEUE="$QUEUE_BE_DATA_ENRICHMENT"
+# All SQS queues whose absence should trigger a re-seed. Include one per service
+# that consumes its own queues via serverless-offline-sqs so LocalStack state loss
+# is caught for any service, not just BE.
+CANARY_SQS_QUEUES=(
+  "$QUEUE_BE_DATA_ENRICHMENT"
+  "$QUEUE_A2A_DATA_ENRICHMENT"
+)
 CANARY_SECRET_ID="$SECRET_API_KEY_ENCRYPTION"

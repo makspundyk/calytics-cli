@@ -74,12 +74,22 @@ _cal_completions() {
       sync)
         COMPREPLY=($(compgen -W "finapi qonto terraform" -- "$cur"))
         ;;
+      rs)
+        COMPREPLY=($(compgen -W "stream" -- "$cur"))
+        ;;
       deploy)
         COMPREPLY=($(compgen -W "--services-only --infra-only --skip= --env=" -- "$cur"))
         ;;
       help)
         local cmds=$(ls "$CAL_ROOT/commands/"*.sh 2>/dev/null | xargs -I{} basename {} .sh)
         COMPREPLY=($(compgen -W "$cmds" -- "$cur"))
+        ;;
+    esac
+  elif [ "$COMP_CWORD" -eq 3 ]; then
+    local cmd="${COMP_WORDS[1]}"
+    case "$cmd" in
+      rs)
+        COMPREPLY=($(compgen -W "dev sandbox --source --history" -- "$cur"))
         ;;
     esac
   fi

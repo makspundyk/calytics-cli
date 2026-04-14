@@ -19,3 +19,10 @@ export STAGE="${STAGE:-local}"
 
 export BE_ADMIN_DIR="${BE_ADMIN_DIR:-$CAL_PROJECT/calytics-be-admin}"
 export SHARED_MODULES_DIR="${SHARED_MODULES_DIR:-$CAL_PROJECT/calytics-shared-modules}"
+
+# WSL2 resolves AAAA records via the Windows-side nameserver and frequently stalls
+# on IPv6 before falling back to IPv4. Node's fetch (used by Serverless Framework v4
+# for its license check) hits this hard, producing `ETIMEDOUT` against api.serverless.com
+# even when curl works fine. Forcing IPv4-first preserves normal behavior everywhere
+# else but eliminates the stall for `npm run offline:local`.
+export NODE_OPTIONS="${NODE_OPTIONS:---dns-result-order=ipv4first}"

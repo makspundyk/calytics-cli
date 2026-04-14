@@ -15,11 +15,6 @@ if svc_is_process "$svc"; then
   sleep 1
   start_process_service "$svc"
 elif svc_is_docker "$svc"; then
-  container="${SVC_CONTAINER[$svc]}"
-  if container_is_running "$container"; then
-    docker restart "$container" &>/dev/null
-    ok "$label restarted"
-  else
-    start_docker_service "$svc"
-  fi
+  stop_docker_service "$svc"
+  start_docker_service "$svc"
 fi

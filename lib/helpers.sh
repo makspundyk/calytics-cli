@@ -48,10 +48,17 @@ ensure_infra() {
   # Verify LocalStack resources exist (ephemeral — can disappear while container stays up)
   LS="http://localhost:${INFRA_LOCALSTACK_PORT}"
 
-  # SQS queues
-  if ! aws --endpoint-url="$LS" sqs get-queue-url \
-       --queue-name "$CANARY_SQS_QUEUE" --region "$AWS_REGION" &>/dev/null; then
-    warn "SQS queues lost — re-seeding..."
+  # SQS queues — check one canary per service (BE + A2A) so neither can silently go missing
+  local missing_queue=""
+  for q in "${CANARY_SQS_QUEUES[@]}"; do
+    if ! aws --endpoint-url="$LS" sqs get-queue-url \
+         --queue-name "$q" --region "$AWS_REGION" &>/dev/null; then
+      missing_queue="$q"
+      break
+    fi
+  done
+  if [ -n "$missing_queue" ]; then
+    warn "SQS queues lost ($missing_queue missing) — re-seeding..."
     run_seeder "$SEEDER_QUEUES" 2>&1 | tail -3
     ok "SQS queues re-seeded"
   fi
@@ -158,6 +165,7 @@ container_is_running() {
 }
 
 # Start a process-managed service (background, with log)
+# Auto-retries on transient Serverless API license-check timeouts (v4 phones home each run).
 start_process_service() {
   local svc="$1"
   local dir="$CAL_PROJECT/${SVC_DIR[$svc]}"
@@ -168,18 +176,72 @@ start_process_service() {
 
   [ ! -d "$dir" ] && { warn "$label directory not found: $dir"; return 1; }
 
-  > "$log"  # truncate log
-  (cd "$dir" && $cmd > "$log" 2>&1 &)
+  # Declared in lib/names.sh (SVC_USES_SERVERLESS). These services hit the v4 license API on start.
+  local uses_sls=0
+  svc_uses_serverless "$svc" && uses_sls=1
 
-  if [ "$port" -gt 0 ]; then
-    if wait_for_log "$log" "Server ready" 45; then
-      ok "$label ready on :$port"
-    else
-      warn "$label may still be starting — check: tail -f $log"
-    fi
-  else
-    ok "$label started — check: tail -f $log"
-  fi
+  local max_attempts=3 attempt=1
+  local ready_timeout=120  # A2A runs `npm run build &&` first, so allow generous TS compile window
+  while [ "$attempt" -le "$max_attempts" ]; do
+    > "$log"  # truncate log
+    (cd "$dir" && $cmd > "$log" 2>&1 &)
+
+    # Single loop: wait for either "Server ready" or the transient SLS license-check failure.
+    # The failure can surface late (A2A does `npm run build` before invoking serverless).
+    local outcome=pending
+    for _ in $(seq 1 "$ready_timeout"); do
+      sleep 1
+      if [ "$port" -gt 0 ] && grep -q "Server ready" "$log" 2>/dev/null; then
+        outcome=ready
+        break
+      fi
+      if [ "$uses_sls" -eq 1 ] && grep -qE 'Unable to reach the Serverless API|ETIMEDOUT|fetch failed' "$log" 2>/dev/null; then
+        outcome=sls_fail
+        break
+      fi
+      # Port-less services (rs stream): once the process prints output and stays up, treat as ready.
+      if [ "$port" -eq 0 ] && [ "$(wc -c < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
+        # Give it one more second to surface any immediate failure, then declare ok
+        sleep 1
+        if [ "$uses_sls" -eq 1 ] && grep -qE 'Unable to reach the Serverless API|ETIMEDOUT|fetch failed' "$log" 2>/dev/null; then
+          outcome=sls_fail
+        else
+          outcome=ready_noport
+        fi
+        break
+      fi
+    done
+
+    case "$outcome" in
+      ready)
+        ok "$label ready on :$port"
+        return 0
+        ;;
+      ready_noport)
+        ok "$label started — check: tail -f $log"
+        return 0
+        ;;
+      sls_fail)
+        warn "$label: Serverless API unreachable (attempt $attempt/$max_attempts) — retrying..."
+        [ "$port" -gt 0 ] && kill_port "$port"
+        pgrep -f "${SVC_DIR[$svc]}" 2>/dev/null | xargs -r kill -9 2>/dev/null || true
+        attempt=$((attempt + 1))
+        sleep 2
+        continue
+        ;;
+      pending)
+        warn "$label may still be starting — check: tail -f $log"
+        return 0
+        ;;
+    esac
+  done
+
+  warn "$label: Serverless API unreachable after $max_attempts attempts."
+  warn "  Network to api.serverless.com is flaky. Options:"
+  warn "    1) Retry: cal restart $svc"
+  warn "    2) Set a headless key: export SERVERLESS_ACCESS_KEY=<key from app.serverless.com>"
+  warn "    3) Downgrade to license-free: npm i -D serverless@3  (in ${SVC_DIR[$svc]})"
+  return 1
 }
 
 # Start a docker-managed service
@@ -205,7 +267,7 @@ start_docker_service() {
   esac
 
   # Start via compose (all profiles so any service can be targeted)
-  dc --profile app --profile docs --profile tools up -d "$(
+  dc --profile app --profile docs --profile tools up --build -d "$(
     echo "$compose_name"
   )" 2>/dev/null
   ok "$label started"
