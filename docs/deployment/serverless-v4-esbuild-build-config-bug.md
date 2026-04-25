@@ -388,7 +388,7 @@ This is automated in `local-deploy.sh` (Phase 3.5) — it auto-discovers all mod
 | Module | Build script | Required by | Notes |
 |--------|-------------|-------------|-------|
 | `calytics-ais-connection` | `tsc && tsc-alias` | calytics-be, calytics-a2a | Must build locally |
-| `calorics-payment-reconciliation` | `tsc && tsc-alias` | calytics-be, calytics-a2a | Must build locally |
+| `calytics-payment-reconciliation` | `tsc && tsc-alias` | calytics-be, calytics-a2a | Must build locally |
 | `calytics-dispute-recognition` | `tsc && tsc-alias` | calytics-be | Has pre-existing TS errors, builds with warnings |
 | `calytics-sdk-orchestartor` | workspaces build | Publishes `@calytics-sdk/*` | Not needed locally (npm packages used instead) |
 | `calytics-authorization` | none | — | No build needed |

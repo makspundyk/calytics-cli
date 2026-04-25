@@ -51,19 +51,19 @@ _cal_completions() {
   elif [ "$COMP_CWORD" -eq 2 ]; then
     case "$prev" in
       restart|logs|open)
-        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui webhooks all" -- "$cur"))
+        COMPREPLY=($(compgen -W "be a2a cp rs admin fe docs dynamo-gui webhooks all" -- "$cur"))
         ;;
       start)
-        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui webhooks all infra" -- "$cur"))
+        COMPREPLY=($(compgen -W "be a2a cp rs admin fe docs dynamo-gui webhooks all infra" -- "$cur"))
         ;;
       stop)
-        COMPREPLY=($(compgen -W "be a2a rs admin fe docs dynamo-gui webhooks infra" -- "$cur"))
+        COMPREPLY=($(compgen -W "be a2a cp rs admin fe docs dynamo-gui webhooks infra" -- "$cur"))
         ;;
       seed)
-        COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables" -- "$cur"))
+        COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables cross-product-tables" -- "$cur"))
         ;;
       build)
-        COMPREPLY=($(compgen -W "shared shims be admin a2a docs" -- "$cur"))
+        COMPREPLY=($(compgen -W "shared shims be admin a2a cp docs" -- "$cur"))
         ;;
       git)
         COMPREPLY=($(compgen -W "fetch status" -- "$cur"))

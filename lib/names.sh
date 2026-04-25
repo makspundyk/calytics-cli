@@ -31,6 +31,7 @@ COMPOSE_PROJECT="calytics"
 declare -A SVC_PORT=(
   [be]=3333
   [a2a]=3000
+  [cp]=3045
   [rs]=0
   [admin]=9000
   [fe]=5000
@@ -43,6 +44,7 @@ declare -A SVC_PORT=(
 declare -A SVC_DIR=(
   [be]=calytics-be
   [a2a]=calytics-a2a
+  [cp]=calytics-cross-product
   [rs]=calytics-risk-scoring
   [admin]=calytics-be-admin
   [fe]=calytics-fe
@@ -62,6 +64,7 @@ declare -A SVC_CONTAINER=(
 declare -A SVC_START=(
   [be]="npm run offline:local"
   [a2a]="npm run offline:local"
+  [cp]="npm run offline:local"
   [rs]="npm run stream"
 )
 
@@ -69,6 +72,7 @@ declare -A SVC_START=(
 declare -A SVC_LOG=(
   [be]="$LOG_DIR/calytics-be.log"
   [a2a]="$LOG_DIR/calytics-a2a.log"
+  [cp]="$LOG_DIR/calytics-cross-product.log"
   [rs]="$LOG_DIR/calytics-risk-scoring.log"
 )
 
@@ -76,6 +80,7 @@ declare -A SVC_LOG=(
 declare -A SVC_LABEL=(
   [be]="calytics-be"
   [a2a]="calytics-a2a"
+  [cp]="calytics-cross-product"
   [rs]="calytics-risk-scoring"
   [admin]="calytics-be-admin"
   [fe]="calytics-fe"
@@ -88,6 +93,7 @@ declare -A SVC_LABEL=(
 declare -A SVC_URL=(
   [be]="http://localhost:${SVC_PORT[be]}"
   [a2a]="http://localhost:${SVC_PORT[a2a]}"
+  [cp]="http://localhost:${SVC_PORT[cp]}"
   [rs]=""
   [admin]="http://localhost:${SVC_PORT[admin]}"
   [fe]="http://$LOCAL_IP:${SVC_PORT[fe]}"
@@ -97,16 +103,19 @@ declare -A SVC_URL=(
 )
 
 # ── Service categorization ───────────────────────────────────────
-SVC_PROCESS_LIST=(be a2a rs)
+# `cp` (calytics-cross-product) is the multi-product matcher / dispute-recognition
+# orchestrator: Payment Reconciliation lives here, Dispute Recognition lives here.
+# Producers (be, a2a) publish to its SQS queue; this lambda consumes + processes.
+SVC_PROCESS_LIST=(be a2a cp rs)
 SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks)
-SVC_ALL_LIST=(be a2a rs admin fe docs dynamo-gui webhooks)
-SVC_INFRA_DEPENDENT=(be a2a rs admin fe)
+SVC_ALL_LIST=(be a2a cp rs admin fe docs dynamo-gui webhooks)
+SVC_INFRA_DEPENDENT=(be a2a cp rs admin fe)
 SVC_INDEPENDENT=(docs dynamo-gui webhooks)
 
 # Services whose start command invokes Serverless Framework v4, which phones
 # home to api.serverless.com on every run. `start_process_service` uses this
 # to auto-retry when the license-check fetch fails with ETIMEDOUT.
-SVC_USES_SERVERLESS=(be a2a rs)
+SVC_USES_SERVERLESS=(be a2a cp rs)
 
 # ── DynamoDB table names ─────────────────────────────────────────
 # BE tables
@@ -149,6 +158,17 @@ QUEUE_BE_DEAD_LETTER="calytics-be-${STAGE}-dead-letter.fifo"
 QUEUE_BE_JOBS="calytics-be-${STAGE}-jobs"
 QUEUE_A2A_DATA_ENRICHMENT="calytics-a2a-${STAGE}-data-enrichment.fifo"
 QUEUE_A2A_DATA_ENRICHMENT_DLQ="calytics-a2a-${STAGE}-data-enrichment-dlq.fifo"
+
+# Cross-product (Payment Reconciliation + Dispute Recognition transporter).
+# Producers (be, a2a) publish here; cross-product Lambda consumes via SQS event source.
+QUEUE_CROSS_PRODUCT_TRANSPORTER="cross-product-transporter.fifo"
+QUEUE_CROSS_PRODUCT_TRANSPORTER_DLQ="cross-product-transporter-dlq.fifo"
+
+# Cross-product DDB tables. In production these live in an external infra repo
+# (cross-product reads them via `data "aws_dynamodb_table"`); LocalStack is
+# seeded from `seeders/cross-product-tables.sh` for parity.
+TABLE_CROSS_PRODUCT_WORKER_TASKS="cross-product-${STAGE}-worker-tasks"
+TABLE_CROSS_PRODUCT_RETURNS_LOG="cross-product-${STAGE}-returns-log"
 
 # ── Secrets Manager IDs ──────────────────────────────────────────
 SECRET_API_KEY_ENCRYPTION="calytics-be-admin/api-key-encryption"
@@ -223,6 +243,7 @@ SEEDER_WEBHOOKS="webhooks"
 SEEDER_PLANS="plans"
 SEEDER_API_KEYS="api-keys"
 SEEDER_A2A_TABLES="a2a-tables"
+SEEDER_CROSS_PRODUCT_TABLES="cross-product-tables"
 
 # Ordered list for `cal seed all` — webhooks excluded (auto-seeded by cal start webhooks)
 SEEDER_ALL_LIST=(
@@ -232,6 +253,7 @@ SEEDER_ALL_LIST=(
   "$SEEDER_CLIENT"
   "$SEEDER_PLANS"
   "$SEEDER_API_KEYS"
+  "$SEEDER_CROSS_PRODUCT_TABLES"
 )
 
 # ── Stream subscriber (remote env → local scoring) ──────────────
@@ -266,5 +288,6 @@ CANARY_SQS_QUEUE="$QUEUE_BE_DATA_ENRICHMENT"
 CANARY_SQS_QUEUES=(
   "$QUEUE_BE_DATA_ENRICHMENT"
   "$QUEUE_A2A_DATA_ENRICHMENT"
+  "$QUEUE_CROSS_PRODUCT_TRANSPORTER"
 )
 CANARY_SECRET_ID="$SECRET_API_KEY_ENCRYPTION"

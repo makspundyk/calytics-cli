@@ -11,6 +11,8 @@ svc_resolve() {
   case "$1" in
     be|debit-guard|dg|backend) echo "be" ;;
     a2a)                       echo "a2a" ;;
+    cp|cross-product|xp|pr|payment-reconciliation|dr|dispute-recognition)
+                               echo "cp" ;;
     rs|risk|risk-scoring)      echo "rs" ;;
     admin|be-admin)            echo "admin" ;;
     fe|frontend)               echo "fe" ;;

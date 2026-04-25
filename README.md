@@ -46,7 +46,7 @@ cal logs <service>            # Tail logs (Ctrl+C to stop)
 cal open <service>            # Open service URL in browser
 ```
 
-> **Infra dependency:** `be`, `a2a`, `rs`, `admin`, `fe` need LocalStack + Postgres.
+> **Infra dependency:** `be`, `a2a`, `cp`, `rs`, `admin`, `fe` need LocalStack + Postgres.
 > Starting any of them auto-starts infra if it's down.
 > `docs` and `dynamo-gui` are independent.
 
@@ -102,6 +102,7 @@ cal seed plans                # Seed product plans + subscriptions
 cal seed api-keys             # Seed API keys
 cal seed ses                  # Verify SES email identity
 cal seed a2a-tables           # Create A2A DynamoDB tables
+cal seed cross-product-tables # Create cross-product DDB tables (worker-tasks, returns-log)
 ```
 
 ### Migrate
@@ -119,12 +120,11 @@ cal migrate dynamo            # Run DynamoDB migrations
 Subscribe to a remote DynamoDB Stream and run the risk-scoring pipeline locally. Reads real events from development/sandbox, scores them through the engine, writes results to LocalStack.
 
 ```bash
-cal rs stream dev                          # DG verifications, live (new records only)
-cal rs stream dev --history                # DG verifications, from oldest available
-cal rs stream sandbox                      # DG verifications on sandbox
-cal rs stream dev --source a2a             # A2A payments stream
-cal rs stream dev --source disputes        # Disputes stream (dispute-recognition)
-cal rs stream dev --source all             # DG + A2A + Disputes (parallel)
+cal rs stream dev                    # DG verifications, live (new records only)
+cal rs stream dev --history          # DG verifications, from oldest available
+cal rs stream sandbox                # DG verifications on sandbox
+cal rs stream dev --source a2a       # A2A payments stream
+cal rs stream dev --source all       # Both DG + A2A (parallel)
 ```
 
 > **Prerequisites:** AWS credentials (`aws sso login`), LocalStack running (`cal start infra`), RS tables migrated (`cal migrate dynamo`).
@@ -158,6 +158,7 @@ cal morning                   # Fetch repos + system check + start everything
 |-------|---------|------|
 | `be` | calytics-be | 3333 |
 | `a2a` | calytics-a2a | 3000 |
+| `cp` (also `xp`, `pr`, `dr`) | calytics-cross-product (Payment Reconciliation + Dispute Recognition) | 3045 |
 | `rs` | calytics-risk-scoring | stream |
 | `admin` | calytics-be-admin | 9000 |
 | `fe` | calytics-fe | 5000 |

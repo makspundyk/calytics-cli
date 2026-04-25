@@ -45,6 +45,15 @@ A2A_DATA_ENRICHMENT_QUEUE="${A2A_DATA_ENRICHMENT_QUEUE:-calytics-a2a-local-data-
 A2A_DATA_ENRICHMENT_DLQ="${A2A_DATA_ENRICHMENT_DLQ:-calytics-a2a-local-data-enrichment-dlq.fifo}"
 SEED_A2A_QUEUES="${SEED_A2A_QUEUES:-1}"
 
+# Calytics-cross-product transporter queue (Payment Reconciliation + Dispute
+# Recognition pull-transactions). Producers (be, a2a) publish here; the
+# cross-product RunPaymentReconciliationIngressLambda is wired as the SQS
+# event source. Defined in Terraform module worker-platform; mirrored here
+# for local LocalStack parity.
+SEED_CROSS_PRODUCT_QUEUES="${SEED_CROSS_PRODUCT_QUEUES:-1}"
+CROSS_PRODUCT_TRANSPORTER_QUEUE="${CROSS_PRODUCT_TRANSPORTER_QUEUE:-cross-product-transporter.fifo}"
+CROSS_PRODUCT_TRANSPORTER_DLQ="${CROSS_PRODUCT_TRANSPORTER_DLQ:-cross-product-transporter-dlq.fifo}"
+
 # Queue Settings
 MESSAGE_RETENTION_PERIOD="${MESSAGE_RETENTION_PERIOD:-1209600}"  # 14 days
 VISIBILITY_TIMEOUT="${VISIBILITY_TIMEOUT:-70}"
@@ -280,6 +289,39 @@ if [ "${SEED_A2A_QUEUES}" = "1" ]; then
       --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$A2A_DLQ_ARN\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \
       > /dev/null
     print_success "Redrive policy configured for $A2A_DATA_ENRICHMENT_QUEUE"
+  fi
+fi
+
+# -----------------------------------------------------------------------------
+# Step 5: Calytics-cross-product transporter queue (PR + DR ingress)
+# -----------------------------------------------------------------------------
+if [ "${SEED_CROSS_PRODUCT_QUEUES}" = "1" ]; then
+  print_header "Step 5: Calytics-cross-product transporter queue"
+
+  # DLQ (FIFO — must match main queue type)
+  create_queue \
+    "$CROSS_PRODUCT_TRANSPORTER_DLQ" \
+    "true" \
+    "MessageRetentionPeriod=$MESSAGE_RETENTION_PERIOD"
+
+  # Main FIFO transporter queue (producers publish here)
+  create_queue \
+    "$CROSS_PRODUCT_TRANSPORTER_QUEUE" \
+    "true" \
+    ""
+
+  # Redrive policy
+  if aws --endpoint-url="$AWS_ENDPOINT_URL" --region="$AWS_REGION" \
+      sqs get-queue-url --queue-name "$CROSS_PRODUCT_TRANSPORTER_QUEUE" &>/dev/null; then
+    CP_DLQ_URL=$(get_queue_url "$CROSS_PRODUCT_TRANSPORTER_DLQ")
+    CP_DLQ_ARN=$(get_queue_arn "$CP_DLQ_URL")
+    CP_QUEUE_URL=$(get_queue_url "$CROSS_PRODUCT_TRANSPORTER_QUEUE")
+    aws --endpoint-url="$AWS_ENDPOINT_URL" --region="$AWS_REGION" \
+      sqs set-queue-attributes \
+      --queue-url "$CP_QUEUE_URL" \
+      --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$CP_DLQ_ARN\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \
+      > /dev/null
+    print_success "Redrive policy configured for $CROSS_PRODUCT_TRANSPORTER_QUEUE"
   fi
 fi
 
