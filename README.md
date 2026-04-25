@@ -168,14 +168,14 @@ cal morning                   # Fetch repos + system check + start everything
 
 ### Webhook Tester
 
-Local alternative to webhook.site. Payloads saved to `/tmp/calytics-webhooks/` (LLM-readable).
+Local alternative to webhook.site, backed by `ghcr.io/tarampampam/webhook-tester:2`. Captured payloads live in the `webhook_data` Docker volume and the in-container `/data` directory; query them via the tester's API or the web UI.
 
-Each product has a stable webhook endpoint:
-- **DebitGuard:** `http://localhost:8090/11111111-1111-1111-1111-111111111111`
-- **OwnershipCheck:** `http://localhost:8090/22222222-2222-2222-2222-222222222222`
-- **A2A + CC:** `http://localhost:8090/33333333-3333-3333-3333-333333333333`
+Each product has a stable webhook endpoint pinned in `lib/names.sh` (run with `--auto-create-sessions`, so the UUIDs auto-materialize the first time they're hit):
+- **DebitGuard:** `http://localhost:8090/a0937803-8760-4282-83ce-873ca2d1d78c`
+- **OwnershipCheck:** `http://localhost:8090/844af3bb-3fda-45df-a823-d4ef235309dc`
+- **A2A + CC:** `http://localhost:8090/f5e27a02-ad19-4641-8e56-8bc9f4d33cfb`
 
-`cal seed webhooks` auto-configures these URLs in the database. Open `cal open webhooks` for the web UI.
+`cal seed webhooks` writes these URLs into the admin DB (`client_webhooks`) and ensures each session exists. Use `cal open webhooks [dg|oc|a2a]` to jump into the inspector UI.
 
 For remote testing (e.g. development env → local): use ngrok to expose the webhook port:
 ```bash

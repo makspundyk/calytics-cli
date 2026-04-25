@@ -61,25 +61,27 @@ if [ -n "$target" ]; then
     [ -n "$log" ] && echo -e "  Log:        $log"
   fi
 
-  # Webhook-specific: show sessions + request counts
+  # Webhook-specific: show sessions + live request counts (via API).
+  # Two URLs per product: callback (apps POST here, returns empty 200 — blank
+  # in a browser by design) and inspector (open in browser to view captures).
   if [ "$svc" = "webhooks" ] && _svc_running "$svc"; then
     echo ""
-    echo -e "  ${BOLD}Sessions${NC}"
-    echo -e "    DebitGuard:       ${CYAN}${WEBHOOK_UI_DG:-not created}${NC}"
-    echo -e "    OwnershipCheck:   ${CYAN}${WEBHOOK_UI_OC:-not created}${NC}"
-    echo -e "    A2A + CC:         ${CYAN}${WEBHOOK_UI_A2A:-not created}${NC}"
+    echo -e "  ${BOLD}Sessions${NC}  ${DIM}(callback / inspector)${NC}"
+    echo -e "    DebitGuard      callback:   ${CYAN}${WEBHOOK_URL_DG}${NC}"
+    echo -e "                    inspector:  ${CYAN}${WEBHOOK_UI_DG}${NC}"
+    echo -e "    OwnershipCheck  callback:   ${CYAN}${WEBHOOK_URL_OC}${NC}"
+    echo -e "                    inspector:  ${CYAN}${WEBHOOK_UI_OC}${NC}"
+    echo -e "    A2A + CC        callback:   ${CYAN}${WEBHOOK_URL_A2A}${NC}"
+    echo -e "                    inspector:  ${CYAN}${WEBHOOK_UI_A2A}${NC}"
     echo ""
     echo -e "  ${BOLD}Requests received${NC}"
     for session_name in "DG:$WEBHOOK_SESSION_DG" "OC:$WEBHOOK_SESSION_OC" "A2A:$WEBHOOK_SESSION_A2A"; do
       name="${session_name%%:*}"
       uuid="${session_name##*:}"
-      count=$(find "$WEBHOOK_DATA_DIR/$uuid" -name "request.*.json" 2>/dev/null | wc -l)
+      count=$(curl -sf "$WEBHOOK_BASE_URL/api/session/$uuid/requests" 2>/dev/null \
+              | grep -o '"uuid"' | wc -l)
       echo -e "    $name: $count requests"
     done
-    echo ""
-    echo -e "  ${BOLD}Data directory${NC}"
-    echo -e "    $WEBHOOK_DATA_DIR/"
-    echo -e "    ${DIM}(files readable by LLM / scripts)${NC}"
   fi
 
   echo ""
@@ -123,13 +125,18 @@ for svc in "${SVC_ALL_LIST[@]}"; do
 done
 echo ""
 
-# Webhooks summary (if running)
+# Webhooks summary (if running). Two URLs per product: the bare /<uuid>
+# is the callback (apps POST here, browser sees blank by design); /s/<uuid>
+# is the inspector UI to view captured requests.
 if _svc_running "webhooks"; then
-  echo -e "  ${BOLD}Webhook Endpoints${NC}"
-  echo -e "    DG:   ${CYAN}${WEBHOOK_URL_DG:-not created}${NC}"
-  echo -e "    OC:   ${CYAN}${WEBHOOK_URL_OC:-not created}${NC}"
-  echo -e "    A2A:  ${CYAN}${WEBHOOK_URL_A2A:-not created}${NC}"
-  echo -e "    UI:   ${CYAN}${WEBHOOK_BASE_URL}${NC}"
+  echo -e "  ${BOLD}Webhook Endpoints${NC}  ${DIM}(callback / inspector)${NC}"
+  echo -e "    DG    callback:   ${CYAN}${WEBHOOK_URL_DG}${NC}"
+  echo -e "          inspector:  ${CYAN}${WEBHOOK_UI_DG}${NC}"
+  echo -e "    OC    callback:   ${CYAN}${WEBHOOK_URL_OC}${NC}"
+  echo -e "          inspector:  ${CYAN}${WEBHOOK_UI_OC}${NC}"
+  echo -e "    A2A   callback:   ${CYAN}${WEBHOOK_URL_A2A}${NC}"
+  echo -e "          inspector:  ${CYAN}${WEBHOOK_UI_A2A}${NC}"
+  echo -e "    UI root:          ${CYAN}${WEBHOOK_BASE_URL}${NC}"
   echo ""
 fi
 

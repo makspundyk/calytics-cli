@@ -34,9 +34,9 @@ case "$target" in
     dc --profile app --profile docs --profile tools up -d 2>/dev/null
     ok "Docker services started"
 
-    # Post-start: seed webhook URLs (webhook-tester is now running)
+    # Post-start: wait for webhook-tester, then seed callback URLs into the DB
     for i in $(seq 1 10); do
-      curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
+      curl -sf "$WEBHOOK_BASE_URL/healthz" -o /dev/null 2>/dev/null && break
       sleep 1
     done
     info "Seeding webhook URLs..."

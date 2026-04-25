@@ -186,31 +186,28 @@ SECRET_BRIGHT_DATA="calytics/local/bright-data/credentials"
 SECRET_BRIGHT_DATA_PROD="calytics/prod/bright-data/credentials"
 
 # ── Webhook Tester ────────────────────────────────────────────────
-WEBHOOK_IMAGE="ghcr.io/tarampampam/webhook-tester:2"
-WEBHOOK_DATA_DIR="/tmp/calytics-webhooks"
-WEBHOOK_STATE_FILE="$WEBHOOK_DATA_DIR/.sessions.env"
-WEBHOOK_BASE_URL="http://localhost:${SVC_PORT[webhooks]}"
+# Local webhook tester: ghcr.io/tarampampam/webhook-tester:2 on :8090.
+# Started with `--auto-create-sessions`, so any inbound request to /{uuid}
+# materializes the session if it doesn't already exist. UUIDs are pinned per
+# product so callback URLs in seeded webhooks/Postman/docs are stable across
+# restarts, fresh volumes, and different machines.
+export WEBHOOK_IMAGE="ghcr.io/tarampampam/webhook-tester:2"
+export WEBHOOK_BASE_URL="http://localhost:${SVC_PORT[webhooks]}"
 
 # Product labels for webhook sessions
 WEBHOOK_PRODUCTS=(dg oc a2a)
 declare -A WEBHOOK_PRODUCT_LABEL=( [dg]="DebitGuard" [oc]="OwnershipCheck" [a2a]="A2A + CC" )
 
-# Load session UUIDs from state file (created by `cal seed webhooks`)
-# If file doesn't exist yet, variables are empty — seeder creates them.
-WEBHOOK_SESSION_DG=""
-WEBHOOK_SESSION_OC=""
-WEBHOOK_SESSION_A2A=""
-if [ -f "$WEBHOOK_STATE_FILE" ]; then
-  source "$WEBHOOK_STATE_FILE"
-fi
+export WEBHOOK_SESSION_DG="a0937803-8760-4282-83ce-873ca2d1d78c"
+export WEBHOOK_SESSION_OC="844af3bb-3fda-45df-a823-d4ef235309dc"
+export WEBHOOK_SESSION_A2A="f5e27a02-ad19-4641-8e56-8bc9f4d33cfb"
 
-# Derived URLs (empty if sessions not created yet)
-WEBHOOK_URL_DG="${WEBHOOK_SESSION_DG:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_DG}}"
-WEBHOOK_URL_OC="${WEBHOOK_SESSION_OC:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_OC}}"
-WEBHOOK_URL_A2A="${WEBHOOK_SESSION_A2A:+${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_A2A}}"
-WEBHOOK_UI_DG="${WEBHOOK_SESSION_DG:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_DG}}"
-WEBHOOK_UI_OC="${WEBHOOK_SESSION_OC:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_OC}}"
-WEBHOOK_UI_A2A="${WEBHOOK_SESSION_A2A:+${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_A2A}}"
+export WEBHOOK_URL_DG="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_DG}"
+export WEBHOOK_URL_OC="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_OC}"
+export WEBHOOK_URL_A2A="${WEBHOOK_BASE_URL}/${WEBHOOK_SESSION_A2A}"
+export WEBHOOK_UI_DG="${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_DG}"
+export WEBHOOK_UI_OC="${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_OC}"
+export WEBHOOK_UI_A2A="${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_A2A}"
 
 # ── S3 bucket names ──────────────────────────────────────────────
 S3_ADMIN_BUCKET="calytics-be-${STAGE}-admin"

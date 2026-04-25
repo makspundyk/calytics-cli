@@ -272,10 +272,10 @@ start_docker_service() {
   )" 2>/dev/null
   ok "$label started"
 
-  # Post-start: seed webhook URLs into the database
+  # Post-start: wait for webhook-tester, then seed callback URLs into the DB
   if [ "$svc" = "webhooks" ]; then
     for i in $(seq 1 10); do
-      curl -sf "$WEBHOOK_BASE_URL/api/session" -o /dev/null 2>/dev/null && break
+      curl -sf "$WEBHOOK_BASE_URL/healthz" -o /dev/null 2>/dev/null && break
       sleep 1
     done
     info "Seeding webhook URLs for main client..."
