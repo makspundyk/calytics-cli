@@ -184,14 +184,30 @@ start_process_service() {
   local ready_timeout=120  # A2A runs `npm run build &&` first, so allow generous TS compile window
   while [ "$attempt" -le "$max_attempts" ]; do
     > "$log"  # truncate log
-    (cd "$dir" && $cmd > "$log" 2>&1 &)
+    # Source the per-service .env (if present) so process env carries every
+    # NEW_*_TABLE_NAME / NEW_*_SECRET_ID the service expects. Otherwise the SDK
+    # falls back to its hardcoded defaults (which point at non-existent tables
+    # locally, e.g. AIS_SESSION_CONNECTIONS_TABLE_NAME → 'ais-connection-...'),
+    # and adapters silently fail-closed. Subshell-scoped so we never pollute the
+    # CLI session env or sibling services.
+    (cd "$dir" && [ -f .env ] && set -a && . ./.env >/dev/null 2>&1 && set +a; exec $cmd > "$log" 2>&1 &)
 
     # Single loop: wait for either "Server ready" or the transient SLS license-check failure.
     # The failure can surface late (A2A does `npm run build` before invoking serverless).
     local outcome=pending
     for _ in $(seq 1 "$ready_timeout"); do
       sleep 1
+      # Readiness for port-bound services. Two patterns:
+      #   - HTTP API services (be, a2a): wait for "Server ready" — Nest boots after the lambda port opens.
+      #   - Pure event-driven services (cp): no HTTP routes, so serverless-offline never prints "Server ready";
+      #     the only listener is the lambda invoke port. Detect via "listening on http" + the registered port
+      #     actually being busy. The port_is_busy guard keeps be/a2a from being marked ready prematurely
+      #     (their lambda port opens before the HTTP API on SVC_PORT is up).
       if [ "$port" -gt 0 ] && grep -q "Server ready" "$log" 2>/dev/null; then
+        outcome=ready
+        break
+      fi
+      if [ "$port" -gt 0 ] && grep -q "listening on" "$log" 2>/dev/null && port_is_busy "$port"; then
         outcome=ready
         break
       fi
