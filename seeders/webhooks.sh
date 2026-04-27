@@ -13,7 +13,14 @@ set -euo pipefail
 
 # Configuration
 CLIENT_EMAIL="${CRED_CLIENT_EMAIL:-main.client@gmail.com}"
+# Host-side base URL — used by this seeder to ping/verify webhook-tester
+# from the host (via :8090 host port) and to print human-friendly inspector URLs.
 WEBHOOK_API="${WEBHOOK_BASE_URL:-http://localhost:8090}"
+# Container-side base URL — what we persist into PG `client_webhooks.callback_url`.
+# be-admin runs in Docker and reaches webhook-tester via container DNS on its
+# internal port (8080), not via the host-mapped 8090. Default mirrors the value
+# exported by lib/names.sh ($WEBHOOK_INTERNAL_BASE_URL).
+WEBHOOK_INTERNAL_API="${WEBHOOK_INTERNAL_BASE_URL:-http://calytics-webhook-tester:8080}"
 AWS_ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://localhost:4566}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
@@ -73,6 +80,32 @@ psql_query() {
         -U "$POSTGRES_USER" \
         -d "$POSTGRES_DB" \
         -c "$1"
+}
+
+# Master AES key value for `webhook` issuer. Must match the secret seeded by
+# seeders/secrets.sh under name `calytics-be-admin/webhook-encryption`.
+# be-admin's CryptoService takes SHA-256 of this string as the AES-256-GCM key.
+WEBHOOK_MASTER_PLAINTEXT="${WEBHOOK_MASTER_PLAINTEXT:-local-dev-webhook-encryption-secret-32chars!}"
+
+# Encrypt a plaintext signing secret with the same AES-256-GCM scheme that
+# calytics-be-admin's CryptoOrchestratorRepository uses, so the consumer can
+# decrypt the ciphertext stored in `client_webhooks.encrypted_signing_secret`.
+#
+# Format: base64( iv[12] || authTag[16] || ciphertext )
+# Key:    sha256(WEBHOOK_MASTER_PLAINTEXT)
+encrypt_webhook_secret() {
+    local plain="$1"
+    node -e '
+        const crypto = require("crypto");
+        const master = process.argv[1];
+        const plain  = process.argv[2];
+        const key = crypto.createHash("sha256").update(master, "utf8").digest();
+        const iv  = crypto.randomBytes(12);
+        const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+        const ct  = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
+        const tag = cipher.getAuthTag();
+        process.stdout.write(Buffer.concat([iv, tag, ct]).toString("base64"));
+    ' "$WEBHOOK_MASTER_PLAINTEXT" "$plain"
 }
 
 # Step 1: Get client ID by email
@@ -151,9 +184,11 @@ ensure_webhook_session "OwnershipCheck" "$WH_OC_UUID"
 ensure_webhook_session "A2A + CC"       "$WH_A2A_UUID"
 
 # Build callback URLs from fixed UUIDs
-WH_CALLBACK_DG="$WEBHOOK_API/$WH_DG_UUID"
-WH_CALLBACK_OC="$WEBHOOK_API/$WH_OC_UUID"
-WH_CALLBACK_A2A="$WEBHOOK_API/$WH_A2A_UUID"
+# Callback URLs persisted in PG must use the container-side base; be-admin
+# resolves them at delivery time from inside the docker network.
+WH_CALLBACK_DG="$WEBHOOK_INTERNAL_API/$WH_DG_UUID"
+WH_CALLBACK_OC="$WEBHOOK_INTERNAL_API/$WH_OC_UUID"
+WH_CALLBACK_A2A="$WEBHOOK_INTERNAL_API/$WH_A2A_UUID"
 
 # Step 5 & 6: Create webhooks and secrets
 print_info "Step 5 & 6: Creating webhooks and secrets"
@@ -162,7 +197,10 @@ print_info "Step 5 & 6: Creating webhooks and secrets"
 WEBHOOK_1_ID="5e11e707-a3f1-4799-a356-27727fb5aade"
 WEBHOOK_1_LABEL="Local - A2A & CC"
 WEBHOOK_1_CALLBACK_URL="$WH_CALLBACK_A2A"
-WEBHOOK_1_SIGNING_SECRET="6b2935e5f69390f9064f3f975a2a21ddd3a823b0a213a03a25d909812acc405b"
+# Single source of truth: this plaintext is stored as-is in Secrets Manager
+# AND encrypted with the webhook master key for the PostgreSQL row, so the
+# consumer's HMAC and the support-revealable secret stay in sync.
+WEBHOOK_1_PLAIN_SIGNING_SECRET="6b2935e5f69390f9064f3f975a2a21ddd3a823b0a213a03a25d909812acc405b"
 # Events: A2APaymentFinalized, CalyticsCollect SessionAccountsReady/SessionFailed, MandateCreated/MandateDeactivated (backend dotted format)
 WEBHOOK_1_EVENTS=(
   "a2a.payment.finalized"
@@ -171,7 +209,6 @@ WEBHOOK_1_EVENTS=(
   "calytics_collect.mandate.created"
   "calytics_collect.mandate.deactivated"
 )
-WEBHOOK_1_SECRET_VALUE="a28d6b30e8eb87864013cd9e15098536b77cef8db4e654087b5fd08c3ff2e661"
 
 print_info "Creating webhook 1: $WEBHOOK_1_LABEL"
 SECRET_NAME_1="clients/$CLIENT_ID/webhooks/$WEBHOOK_1_ID"
@@ -181,32 +218,33 @@ if aws --endpoint-url="$AWS_ENDPOINT_URL" \
     secretsmanager describe-secret \
     --secret-id "$SECRET_NAME_1" \
     >/dev/null 2>&1; then
-    # Secret exists, update it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager put-secret-value \
         --secret-id "$SECRET_NAME_1" \
-        --secret-string "$WEBHOOK_1_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_1_PLAIN_SIGNING_SECRET" \
         > /dev/null
 else
-    # Secret doesn't exist, create it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager create-secret \
         --name "$SECRET_NAME_1" \
-        --secret-string "$WEBHOOK_1_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_1_PLAIN_SIGNING_SECRET" \
         > /dev/null
 fi
+
+WEBHOOK_1_ENCRYPTED_SECRET=$(encrypt_webhook_secret "$WEBHOOK_1_PLAIN_SIGNING_SECRET")
 
 # Build ARRAY['ev1','ev2',...] for webhook 1 events
 WEBHOOK_1_EVENTS_SQL="ARRAY[$(printf "'%s'," "${WEBHOOK_1_EVENTS[@]}" | sed "s/,$//")]"
 
-# Create webhook in database
+# Create webhook in database — encrypted_signing_secret holds AES-256-GCM
+# ciphertext (base64) so be-admin's CryptoService.decrypt('webhook') succeeds.
 psql_exec "
     INSERT INTO client_webhooks (id, label, callback_url, encrypted_signing_secret, events, client_api_settings_id)
     VALUES (
         '$WEBHOOK_1_ID',
         '$WEBHOOK_1_LABEL',
         '$WEBHOOK_1_CALLBACK_URL',
-        '$WEBHOOK_1_SIGNING_SECRET',
+        '$WEBHOOK_1_ENCRYPTED_SECRET',
         $WEBHOOK_1_EVENTS_SQL,
         '$API_SETTINGS_ID'
     );
@@ -218,41 +256,38 @@ print_success "Created webhook 1: $WEBHOOK_1_LABEL (ID: $WEBHOOK_1_ID)"
 WEBHOOK_2_ID="b5b021a7-1158-46e3-b1a7-efdf631d8acf"
 WEBHOOK_2_LABEL="Local - DG"
 WEBHOOK_2_CALLBACK_URL="$WH_CALLBACK_DG"
-WEBHOOK_2_SIGNING_SECRET="63ae00862273a7d993632621d7b320aad61d753d0ec51940a454c4a87dded9d3"
+WEBHOOK_2_PLAIN_SIGNING_SECRET="63ae00862273a7d993632621d7b320aad61d753d0ec51940a454c4a87dded9d3"
 WEBHOOK_2_EVENTS="debit_guard.verification_completed"
-WEBHOOK_2_SECRET_VALUE="24ed3398a46196e78d1818b77ee0a4dd512ef44ba6236a75e094154c89d5907e"
 
 print_info "Creating webhook 2: $WEBHOOK_2_LABEL"
 SECRET_NAME_2="clients/$CLIENT_ID/webhooks/$WEBHOOK_2_ID"
 
-# Create secret in AWS Secrets Manager (create or update)
 if aws --endpoint-url="$AWS_ENDPOINT_URL" \
     secretsmanager describe-secret \
     --secret-id "$SECRET_NAME_2" \
     >/dev/null 2>&1; then
-    # Secret exists, update it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager put-secret-value \
         --secret-id "$SECRET_NAME_2" \
-        --secret-string "$WEBHOOK_2_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_2_PLAIN_SIGNING_SECRET" \
         > /dev/null
 else
-    # Secret doesn't exist, create it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager create-secret \
         --name "$SECRET_NAME_2" \
-        --secret-string "$WEBHOOK_2_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_2_PLAIN_SIGNING_SECRET" \
         > /dev/null
 fi
 
-# Create webhook in database
+WEBHOOK_2_ENCRYPTED_SECRET=$(encrypt_webhook_secret "$WEBHOOK_2_PLAIN_SIGNING_SECRET")
+
 psql_exec "
     INSERT INTO client_webhooks (id, label, callback_url, encrypted_signing_secret, events, client_api_settings_id)
     VALUES (
         '$WEBHOOK_2_ID',
         '$WEBHOOK_2_LABEL',
         '$WEBHOOK_2_CALLBACK_URL',
-        '$WEBHOOK_2_SIGNING_SECRET',
+        '$WEBHOOK_2_ENCRYPTED_SECRET',
         ARRAY['$WEBHOOK_2_EVENTS'],
         '$API_SETTINGS_ID'
     );
@@ -264,41 +299,38 @@ print_success "Created webhook 2: $WEBHOOK_2_LABEL (ID: $WEBHOOK_2_ID)"
 WEBHOOK_3_ID="4b36cba2-d575-4b69-b185-01d1fd8aacbf"
 WEBHOOK_3_LABEL="Local - OC"
 WEBHOOK_3_CALLBACK_URL="$WH_CALLBACK_OC"
-WEBHOOK_3_SIGNING_SECRET="ed33c2d722b8163ea353441b8d4fe2ebed65e158828d26dd66a351e646612711"
+WEBHOOK_3_PLAIN_SIGNING_SECRET="ed33c2d722b8163ea353441b8d4fe2ebed65e158828d26dd66a351e646612711"
 WEBHOOK_3_EVENTS="ownership_check.verification_completed"
-WEBHOOK_3_SECRET_VALUE="05d3d93b00fb992b5ada893e345b5b6971a8fe908dff70020d3c255a5d91a6d4"
 
 print_info "Creating webhook 3: $WEBHOOK_3_LABEL"
 SECRET_NAME_3="clients/$CLIENT_ID/webhooks/$WEBHOOK_3_ID"
 
-# Create secret in AWS Secrets Manager (create or update)
 if aws --endpoint-url="$AWS_ENDPOINT_URL" \
     secretsmanager describe-secret \
     --secret-id "$SECRET_NAME_3" \
     >/dev/null 2>&1; then
-    # Secret exists, update it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager put-secret-value \
         --secret-id "$SECRET_NAME_3" \
-        --secret-string "$WEBHOOK_3_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_3_PLAIN_SIGNING_SECRET" \
         > /dev/null
 else
-    # Secret doesn't exist, create it
     aws --endpoint-url="$AWS_ENDPOINT_URL" \
         secretsmanager create-secret \
         --name "$SECRET_NAME_3" \
-        --secret-string "$WEBHOOK_3_SECRET_VALUE" \
+        --secret-string "$WEBHOOK_3_PLAIN_SIGNING_SECRET" \
         > /dev/null
 fi
 
-# Create webhook in database
+WEBHOOK_3_ENCRYPTED_SECRET=$(encrypt_webhook_secret "$WEBHOOK_3_PLAIN_SIGNING_SECRET")
+
 psql_exec "
     INSERT INTO client_webhooks (id, label, callback_url, encrypted_signing_secret, events, client_api_settings_id)
     VALUES (
         '$WEBHOOK_3_ID',
         '$WEBHOOK_3_LABEL',
         '$WEBHOOK_3_CALLBACK_URL',
-        '$WEBHOOK_3_SIGNING_SECRET',
+        '$WEBHOOK_3_ENCRYPTED_SECRET',
         ARRAY['$WEBHOOK_3_EVENTS'],
         '$API_SETTINGS_ID'
     );

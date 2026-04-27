@@ -199,6 +199,20 @@ create_secret \
     'local-dev-api-key-encryption-secret-32chars!'
 
 # -----------------------------------------------------------------------------
+# Webhook Encryption (calytics-be-admin)
+# -----------------------------------------------------------------------------
+# Master AES key used by ClientCallbackConsumerService to decrypt the
+# per-webhook signing secret stored in PostgreSQL `client_webhooks.
+# encrypted_signing_secret`. Without it, every outbound delivery throws
+# "Secrets Manager can't find the specified secret." before reaching the
+# HTTP POST, blocking end-to-end tests of the unified callback flow.
+print_header "Webhook Encryption"
+
+create_secret \
+    "calytics-be-admin/webhook-encryption" \
+    'local-dev-webhook-encryption-secret-32chars!'
+
+# -----------------------------------------------------------------------------
 # Summary
 # -----------------------------------------------------------------------------
 print_header "📋 Summary"
