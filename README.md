@@ -102,6 +102,7 @@ cal seed plans                # Seed product plans + subscriptions
 cal seed api-keys             # Seed API keys
 cal seed ses                  # Verify SES email identity
 cal seed a2a-tables           # Create A2A DynamoDB tables
+cal seed a2a-payments         # Lifecycle-coverage A2A payment fixture rows
 cal seed cross-product-tables # Create cross-product DDB tables (worker-tasks, returns-log)
 ```
 
@@ -158,8 +159,9 @@ cal morning                   # Fetch repos + system check + start everything
 |-------|---------|------|
 | `be` | calytics-be | 3333 |
 | `a2a` | calytics-a2a | 3000 |
-| `cp` (also `xp`, `pr`, `dr`) | calytics-cross-product (Payment Reconciliation + Dispute Recognition) | 3045 |
-| `rs` | calytics-risk-scoring | stream |
+| `cp` (also `xp`, `pr`, `dr`) | calytics-cross-product (Payment Reconciliation + Dispute Recognition) | 3046 (lambda invoke; no HTTP API) |
+| `rs` | calytics-risk-scoring stream subscriber (manual: `cal rs stream <env>`) | — |
+| `rs-api` (also `rsapi`) | risk-scoring query Lambdas (getScore/batch/history/reputation) — what the SDK calls | 4002 |
 | `admin` | calytics-be-admin | 9000 |
 | `fe` | calytics-fe | 5000 |
 | `docs` | API docs | 8080 |

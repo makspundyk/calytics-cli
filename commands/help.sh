@@ -61,6 +61,7 @@ cat << 'EOF'
     cal seed api-keys             API keys (DB + API Gateway + encryption)
     cal seed ses                  Verify SES email identity
     cal seed a2a-tables           A2A + Calytics Collect DynamoDB tables
+    cal seed a2a-payments         Lifecycle-coverage A2A payment fixture rows
     cal seed cross-product-tables Cross-product DDB tables (worker-tasks, returns-log)
 
   MIGRATE
@@ -97,8 +98,9 @@ cat << 'EOF'
   SERVICE ALIASES
     be, dg      calytics-be             :3333
     a2a         calytics-a2a            :3000
-    cp, xp, pr, dr  calytics-cross-product  :3045
-    rs          calytics-risk-scoring   (stream)
+    cp, xp, pr, dr  calytics-cross-product  :3046
+    rs          calytics-risk-scoring   (manual: cal rs stream <env>)
+    rs-api      risk-scoring API (4 query Lambdas)  :4002
     admin       calytics-be-admin       :9000
     fe          calytics-fe             :5000
     docs        API docs                :8080

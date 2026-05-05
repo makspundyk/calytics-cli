@@ -13,10 +13,11 @@
 #   plans       Seed product plans + subscriptions
 #   api-keys    Seed API keys (DB + API Gateway + encryption)
 #   a2a-tables          Create A2A + CC DynamoDB tables
+#   a2a-payments        Seed lifecycle-coverage A2A payment fixture rows
 #   cross-product-tables Create cross-product DynamoDB tables (worker-tasks, returns-log)
 
 target="${1:-}"
-[ -z "$target" ] && fail "Usage: cal seed <target> (all, secrets, queues, client, admins, webhooks, plans, api-keys, ses, a2a-tables, cross-product-tables)"
+[ -z "$target" ] && fail "Usage: cal seed <target> (all, secrets, queues, client, admins, webhooks, plans, api-keys, ses, a2a-tables, a2a-payments, cross-product-tables)"
 
 _seed() {
   script="$(seeder_path "$1")"
