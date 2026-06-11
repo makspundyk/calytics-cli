@@ -33,6 +33,7 @@ declare -A SVC_PORT=(
   [a2a]=3000
   [cp]=3045
   [rs]=0
+  [rs-api]=4002
   [admin]=9000
   [fe]=5000
   [docs]=8080
@@ -46,6 +47,7 @@ declare -A SVC_DIR=(
   [a2a]=calytics-a2a
   [cp]=calytics-cross-product
   [rs]=calytics-risk-scoring
+  [rs-api]=calytics-risk-scoring
   [admin]=calytics-be-admin
   [fe]=calytics-fe
   [docs]=client-openapi-docs
@@ -66,6 +68,7 @@ declare -A SVC_START=(
   [a2a]="npm run offline:local"
   [cp]="npm run offline:local"
   [rs]="npm run stream"
+  [rs-api]="npm run api:local"
 )
 
 # ── Log files ────────────────────────────────────────────────────
@@ -74,6 +77,7 @@ declare -A SVC_LOG=(
   [a2a]="$LOG_DIR/calytics-a2a.log"
   [cp]="$LOG_DIR/calytics-cross-product.log"
   [rs]="$LOG_DIR/calytics-risk-scoring.log"
+  [rs-api]="$LOG_DIR/calytics-risk-scoring-api.log"
 )
 
 # ── Human-readable labels ────────────────────────────────────────
@@ -82,6 +86,7 @@ declare -A SVC_LABEL=(
   [a2a]="calytics-a2a"
   [cp]="calytics-cross-product"
   [rs]="calytics-risk-scoring"
+  [rs-api]="calytics-risk-scoring API"
   [admin]="calytics-be-admin"
   [fe]="calytics-fe"
   [docs]="API docs"
@@ -95,6 +100,7 @@ declare -A SVC_URL=(
   [a2a]="http://localhost:${SVC_PORT[a2a]}"
   [cp]="http://localhost:${SVC_PORT[cp]}"
   [rs]=""
+  [rs-api]="http://localhost:${SVC_PORT[rs-api]}"
   [admin]="http://localhost:${SVC_PORT[admin]}"
   [fe]="http://$LOCAL_IP:${SVC_PORT[fe]}"
   [docs]="http://localhost:${SVC_PORT[docs]}"
@@ -106,10 +112,10 @@ declare -A SVC_URL=(
 # `cp` (calytics-cross-product) is the multi-product matcher / dispute-recognition
 # orchestrator: Payment Reconciliation lives here, Dispute Recognition lives here.
 # Producers (be, a2a) publish to its SQS queue; this lambda consumes + processes.
-SVC_PROCESS_LIST=(be a2a cp rs)
+SVC_PROCESS_LIST=(be a2a cp rs rs-api)
 SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks)
-SVC_ALL_LIST=(be a2a cp rs admin fe docs dynamo-gui webhooks)
-SVC_INFRA_DEPENDENT=(be a2a cp rs admin fe)
+SVC_ALL_LIST=(be a2a cp rs rs-api admin fe docs dynamo-gui webhooks)
+SVC_INFRA_DEPENDENT=(be a2a cp rs rs-api admin fe)
 SVC_INDEPENDENT=(docs dynamo-gui webhooks)
 
 # Services whose start command invokes Serverless Framework v4, which phones

@@ -14,6 +14,8 @@ svc_resolve() {
     cp|cross-product|xp|pr|payment-reconciliation|dr|dispute-recognition)
                                echo "cp" ;;
     rs|risk|risk-scoring)      echo "rs" ;;
+    rs-api|rsapi|rs:api|risk-scoring-api)
+                               echo "rs-api" ;;
     admin|be-admin)            echo "admin" ;;
     fe|frontend)               echo "fe" ;;
     docs)                      echo "docs" ;;

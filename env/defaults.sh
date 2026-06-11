@@ -17,6 +17,14 @@ export POSTGRES_DB="${POSTGRES_DB:-calytics-admin}"
 export SERVICE_NAME="${SERVICE_NAME:-calytics-be}"
 export STAGE="${STAGE:-local}"
 
+# Risk-scoring handler env (consumed by scripts/local-api.ts and the Lambda handlers).
+# Names mirror the production env injected by Terraform; values are derived from
+# TABLE_RS_* in lib/names.sh so renames propagate from a single source of truth.
+export RISK_SCORING_IBAN_REPUTATION_TABLE_NAME="${RISK_SCORING_IBAN_REPUTATION_TABLE_NAME:-$TABLE_RS_IBAN_REPUTATION}"
+export RISK_SCORING_CURRENT_SCORES_TABLE_NAME="${RISK_SCORING_CURRENT_SCORES_TABLE_NAME:-$TABLE_RS_CURRENT_SCORES}"
+export RISK_SCORING_SCORE_HISTORY_TABLE_NAME="${RISK_SCORING_SCORE_HISTORY_TABLE_NAME:-$TABLE_RS_SCORE_HISTORY}"
+export RISK_SCORING_VELOCITY_TABLE_NAME="${RISK_SCORING_VELOCITY_TABLE_NAME:-$TABLE_RS_VELOCITY}"
+
 export BE_ADMIN_DIR="${BE_ADMIN_DIR:-$CAL_PROJECT/calytics-be-admin}"
 export SHARED_MODULES_DIR="${SHARED_MODULES_DIR:-$CAL_PROJECT/calytics-shared-modules}"
 
