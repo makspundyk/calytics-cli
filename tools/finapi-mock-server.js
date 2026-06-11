@@ -101,6 +101,8 @@ const server = http.createServer(async (req, res) => {
                 registrationDate: u.registrationDate ?? new Date().toISOString().slice(0, 10),
                 deleted: u.deleted ?? false,
                 createdByClientId: u.createdByClientId ?? 'seed',
+                // real finAPI scopes users per mandator; default: a2a- prefix -> M2, rest M1
+                mandator: u.mandator ?? (u.id.startsWith('a2a-') ? 2 : 1),
             });
         }
         return json(res, 200, { ok: true, count: users.length });
@@ -146,6 +148,7 @@ const server = http.createServer(async (req, res) => {
             registrationDate: new Date().toISOString().slice(0, 10),
             deleted: false,
             createdByClientId: who?.clientId ?? 'unknown',
+            mandator: id.startsWith('a2a-') ? 2 : 1,
         });
         return json(res, 201, { id, password, email: payload.email, phone: payload.phone });
     }
@@ -169,7 +172,9 @@ const server = http.createServer(async (req, res) => {
         const page = parseInt(url.searchParams.get('page') ?? '1', 10);
         const perPage = parseInt(url.searchParams.get('perPage') ?? '20', 10);
         const isDeletedParam = url.searchParams.get('isDeleted'); // null = no filter (returns BOTH, deleted masked)
-        let users = [...state.users.values()];
+        // mandator scoping: an admin only sees its own mandator's users (real finAPI behavior)
+        const callerMandator = MANDATOR_BY_CLIENT[who?.clientId] ?? 1;
+        let users = [...state.users.values()].filter((u) => (u.mandator ?? 1) === callerMandator);
         if (isDeletedParam === 'false') users = users.filter((u) => !u.deleted);
         if (isDeletedParam === 'true') users = users.filter((u) => u.deleted);
         const slice = users.slice((page - 1) * perPage, page * perPage).map((u) => ({
