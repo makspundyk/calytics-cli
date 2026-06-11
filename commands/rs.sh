@@ -48,12 +48,23 @@ if [ "$subcmd" = "api" ]; then
   ok "LocalStack running"
 
   info "Checking RS tables..."
+  rs_tables_missing=false
   for table in "${RS_LOCAL_TABLES[@]}"; do
     AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
       aws --endpoint-url="$LOCALSTACK_ENDPOINT" dynamodb describe-table \
       --table-name "$table" --region "$AWS_REGION" &>/dev/null \
-      || fail "Missing table: $table. Run: cal migrate dynamo"
+      || rs_tables_missing=true
   done
+  if [ "$rs_tables_missing" = true ]; then
+    info "RS tables missing — creating via migrate dynamo..."
+    run_cmd migrate dynamo
+    for table in "${RS_LOCAL_TABLES[@]}"; do
+      AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+        aws --endpoint-url="$LOCALSTACK_ENDPOINT" dynamodb describe-table \
+        --table-name "$table" --region "$AWS_REGION" &>/dev/null \
+        || fail "Missing table after migrate: $table"
+    done
+  fi
   ok "RS tables present"
 
   # Free port if busy

@@ -13,12 +13,41 @@
 # ═══════════════════════════════════════════════════════════════════
 
 # Resolve paths from this file's location (no hardcoded usernames)
-export CAL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Works when sourced from bash (BASH_SOURCE) or zsh (%x prompt expansion)
+if [ -n "${BASH_SOURCE:-}" ]; then
+  _CAL_SELF="${BASH_SOURCE[0]}"
+else
+  _CAL_SELF="${(%):-%x}"
+fi
+export CAL_ROOT="$(cd "$(dirname "$_CAL_SELF")" && pwd)"
 export CAL_PROJECT="$(cd "$CAL_ROOT/.." && pwd)"
+unset _CAL_SELF
+
+# The registry uses associative arrays (bash >= 4). macOS ships bash 3.2
+# forever, so resolve a modern bash explicitly instead of trusting PATH.
+_cal_find_bash() {
+  local b
+  for b in "${CAL_BASH:-}" "$(command -v bash 2>/dev/null)" \
+           "$HOME/bin/bash" /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash; do
+    [ -n "$b" ] && [ -x "$b" ] || continue
+    if "$b" -c '[ "${BASH_VERSINFO[0]}" -ge 4 ]' 2>/dev/null; then
+      echo "$b"
+      return 0
+    fi
+  done
+  return 1
+}
+CAL_BASH="$(_cal_find_bash)" || CAL_BASH=""
+export CAL_BASH
 
 cal() {
   local cmd="${1:-help}"
   shift 2>/dev/null || true
+
+  if [ -z "$CAL_BASH" ]; then
+    echo -e "\033[0;31mcal needs bash >= 4\033[0m (macOS ships 3.2). Install one, e.g.: brew install bash"
+    return 1
+  fi
 
   local script="$CAL_ROOT/commands/${cmd}.sh"
   if [ ! -f "$script" ]; then
@@ -30,7 +59,7 @@ cal() {
 
   # Source shared libs into the command's environment
   export CAL_ROOT CAL_PROJECT
-  bash -c "
+  "$CAL_BASH" -c "
     source '$CAL_ROOT/lib/colors.sh'
     source '$CAL_ROOT/lib/services.sh'
     source '$CAL_ROOT/lib/helpers.sh'
@@ -94,4 +123,9 @@ _cal_completions() {
     esac
   fi
 }
-complete -F _cal_completions cal
+# zsh: load bash-compatible completion shims first
+if [ -n "${ZSH_VERSION:-}" ]; then
+  autoload -U +X compinit && compinit -u
+  autoload -U +X bashcompinit && bashcompinit
+fi
+complete -F _cal_completions cal 2>/dev/null || true

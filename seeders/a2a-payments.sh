@@ -46,7 +46,8 @@ if ! aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" \
   exit 1
 fi
 
-NOW_MS="$(date +%s%3N)"
+# Epoch ms from epoch seconds — `date +%s%3N` is GNU-only (breaks on macOS BSD date)
+NOW_MS="$(($(date +%s) * 1000))"
 HOUR_MS=$((60 * 60 * 1000))
 DAY_MS=$((24 * HOUR_MS))
 

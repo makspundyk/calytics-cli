@@ -179,7 +179,8 @@ fi
 # Step 4: Create API keys
 print_section "Step 4: Creating API Keys"
 
-EXPIRES_AT=$(date -u -d "+1 year" +"%Y-%m-%d %H:%M:%S")
+# GNU date uses -d, BSD/macOS date uses -v — try GNU first, fall back to BSD
+EXPIRES_AT=$(date -u -d "+1 year" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+1y +"%Y-%m-%d %H:%M:%S")
 
 for API_KEY_DATA in "${API_KEYS[@]}"; do
     IFS='|' read -r PRODUCT_TYPE API_KEY_VALUE LABEL <<< "$API_KEY_DATA"

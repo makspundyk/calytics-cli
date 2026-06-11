@@ -201,7 +201,7 @@ Type `cal restart ` then Tab to see service names.
 
 ```
 cli/
-├── cal.sh              Entry point (sourced by ~/.bashrc)
+├── cal.sh              Entry point (sourced by ~/.bashrc or ~/.zshrc — bash & zsh, Linux & macOS)
 ├── commands/           Command implementations
 ├── seeders/            Data seeding scripts
 ├── infra/              Infrastructure management

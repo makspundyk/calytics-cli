@@ -12,7 +12,9 @@
 STAGE="${STAGE:-local}"
 
 # ── Network ──────────────────────────────────────────────────────
-LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+# macOS has no `hostname -I` (and same-host networking needs no WSL IP)
+[ -n "$LOCAL_IP" ] || LOCAL_IP="localhost"
 LOCALSTACK_ENDPOINT="http://localhost:4566"
 
 # ── Infrastructure containers ────────────────────────────────────

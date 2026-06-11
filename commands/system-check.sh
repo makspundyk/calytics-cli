@@ -40,7 +40,7 @@ declare -A TOOLS=(
 for tool in git node npm docker aws terraform serverless jq curl lsof openssl zip psql; do
   desc="${TOOLS[$tool]}"
   if has "$tool"; then
-    version=$("$tool" --version 2>&1 | head -1 | grep -oP '[\d]+\.[\d]+\.?[\d]*' | head -1)
+    version=$("$tool" --version 2>&1 | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
     check_pass "$tool ${DIM}($desc) v$version${NC}"
   else
     check_fail "$tool — $desc not installed"
@@ -49,7 +49,7 @@ done
 
 # Node version check
 if has node; then
-  node_major=$(node -v | grep -oP '\d+' | head -1)
+  node_major=$(node -v | grep -oE '[0-9]+' | head -1)
   if [ "$node_major" -ge 22 ]; then
     check_pass "Node.js >= 22 ${DIM}($(node -v))${NC}"
   else
@@ -184,8 +184,10 @@ phase "5. Environment Files (project root)"
 if [ -f "$CAL_PROJECT/.env" ]; then
   check_pass ".env exists"
   # Check if WSL IP is still valid
-  env_ip=$(grep -oP 'http://\K[^:]+' "$CAL_PROJECT/.env" | head -1)
+  env_ip=$(grep -oE 'http://[^:/]+' "$CAL_PROJECT/.env" | head -1 | cut -d/ -f3)
   current_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+  # macOS / non-WSL: no `hostname -I`; browser and services share the host
+  [ -z "$current_ip" ] && current_ip="localhost"
   if [ "$env_ip" = "$current_ip" ]; then
     check_pass ".env WSL IP matches current ($current_ip)"
   else
