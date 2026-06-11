@@ -39,6 +39,12 @@ DATA_ENRICHMENT_DLQ="${DATA_ENRICHMENT_DLQ:-${SERVICE_NAME}-${STAGE}-data-enrich
 CLIENT_CALLBACK_QUEUE="${CLIENT_CALLBACK_QUEUE:-${SERVICE_NAME}-${STAGE}-client-callback}"
 CLIENT_CALLBACK_DLQ="${CLIENT_CALLBACK_DLQ:-${SERVICE_NAME}-${STAGE}-client-callback-dlq}"
 
+# DebitGuard sync housekeeping queue (synchronous DebitGuard lambda publishes
+# one record per record_kind; consumed by the data-enrichment lambda). Standard
+# queue + DLQ; mirrors serverless.yml DgHousekeepingQueue / Terraform dg_housekeeping.
+DG_HOUSEKEEPING_QUEUE="${DG_HOUSEKEEPING_QUEUE:-${SERVICE_NAME}-${STAGE}-dg-housekeeping}"
+DG_HOUSEKEEPING_DLQ="${DG_HOUSEKEEPING_DLQ:-${SERVICE_NAME}-${STAGE}-dg-housekeeping-dlq}"
+
 # Calytics-A2A (data-enrichment only - used by calytics-a2a serverless offline)
 # Set SEED_A2A_QUEUES=1 to also create these when seeding for calytics-be
 A2A_DATA_ENRICHMENT_QUEUE="${A2A_DATA_ENRICHMENT_QUEUE:-calytics-a2a-local-data-enrichment.fifo}"
@@ -176,6 +182,8 @@ echo -e "  Data Enrichment:       ${CYAN}$DATA_ENRICHMENT_QUEUE${NC}"
 echo -e "  Data Enrichment DLQ:   ${CYAN}$DATA_ENRICHMENT_DLQ${NC}"
 echo -e "  Client Callback:       ${CYAN}$CLIENT_CALLBACK_QUEUE${NC}"
 echo -e "  Client Callback DLQ:   ${CYAN}$CLIENT_CALLBACK_DLQ${NC}"
+echo -e "  DG Housekeeping:       ${CYAN}$DG_HOUSEKEEPING_QUEUE${NC}"
+echo -e "  DG Housekeeping DLQ:   ${CYAN}$DG_HOUSEKEEPING_DLQ${NC}"
 echo ""
 
 # -----------------------------------------------------------------------------
@@ -195,6 +203,12 @@ create_queue \
     "false" \
     "MessageRetentionPeriod=$MESSAGE_RETENTION_PERIOD"
 
+# DG Housekeeping DLQ (Standard)
+create_queue \
+    "$DG_HOUSEKEEPING_DLQ" \
+    "false" \
+    "MessageRetentionPeriod=$MESSAGE_RETENTION_PERIOD"
+
 # -----------------------------------------------------------------------------
 # Step 2: Create Main Queues
 # -----------------------------------------------------------------------------
@@ -209,6 +223,12 @@ create_queue \
 # Client Callbacks Queue (Standard)
 create_queue \
     "$CLIENT_CALLBACK_QUEUE" \
+    "false" \
+    "MessageRetentionPeriod=$MESSAGE_RETENTION_PERIOD,VisibilityTimeout=$VISIBILITY_TIMEOUT"
+
+# DG Housekeeping Queue (Standard)
+create_queue \
+    "$DG_HOUSEKEEPING_QUEUE" \
     "false" \
     "MessageRetentionPeriod=$MESSAGE_RETENTION_PERIOD,VisibilityTimeout=$VISIBILITY_TIMEOUT"
 
@@ -258,6 +278,27 @@ aws --endpoint-url="$AWS_ENDPOINT_URL" --region="$AWS_REGION" \
     > /dev/null
 
 print_success "Redrive policy configured for $CLIENT_CALLBACK_QUEUE"
+
+# --- DG Housekeeping Queue Redrive Policy ---
+print_info "Configuring redrive policy for DG Housekeeping queue..."
+
+# Get DG Housekeeping DLQ URL and ARN
+DG_HOUSEKEEPING_DLQ_URL=$(get_queue_url "$DG_HOUSEKEEPING_DLQ")
+DG_HOUSEKEEPING_DLQ_ARN=$(get_queue_arn "$DG_HOUSEKEEPING_DLQ_URL")
+
+print_info "DG Housekeeping DLQ ARN: $DG_HOUSEKEEPING_DLQ_ARN"
+
+# Get DG Housekeeping queue URL
+DG_HOUSEKEEPING_URL=$(get_queue_url "$DG_HOUSEKEEPING_QUEUE")
+
+# Set RedrivePolicy on DG Housekeeping queue
+aws --endpoint-url="$AWS_ENDPOINT_URL" --region="$AWS_REGION" \
+    sqs set-queue-attributes \
+    --queue-url "$DG_HOUSEKEEPING_URL" \
+    --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$DG_HOUSEKEEPING_DLQ_ARN\\\",\\\"maxReceiveCount\\\":\\\"$MAX_RECEIVE_COUNT\\\"}\"}" \
+    > /dev/null
+
+print_success "Redrive policy configured for $DG_HOUSEKEEPING_QUEUE"
 
 # -----------------------------------------------------------------------------
 # Step 4: Calytics-A2A data-enrichment queues (for calytics-a2a serverless offline)
@@ -335,6 +376,7 @@ echo ""
 echo -e "Queue URLs (for .env file):"
 echo -e "  ${BOLD}DATA_ENRICHMENT_QUEUE_URL${NC}=${CYAN}$DATA_ENRICHMENT_URL${NC}"
 echo -e "  ${BOLD}CLIENT_CALLBACKS_QUEUE_URL${NC}=${CYAN}$CLIENT_CALLBACK_URL${NC}"
+echo -e "  ${BOLD}DG_HOUSEKEEPING_QUEUE_URL${NC}=${CYAN}$DG_HOUSEKEEPING_URL${NC}"
 if [ "${SEED_A2A_QUEUES}" = "1" ] && aws --endpoint-url="$AWS_ENDPOINT_URL" --region="$AWS_REGION" sqs get-queue-url --queue-name "$A2A_DATA_ENRICHMENT_QUEUE" &>/dev/null; then
   A2A_DE_URL=$(get_queue_url "$A2A_DATA_ENRICHMENT_QUEUE")
   echo -e "  ${BOLD}DATA_ENRICHMENT_QUEUE_URL (calytics-a2a)${NC}=${CYAN}$A2A_DE_URL${NC}"

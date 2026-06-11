@@ -154,6 +154,8 @@ QUEUE_BE_DATA_ENRICHMENT="calytics-be-${STAGE}-data-enrichment.fifo"
 QUEUE_BE_DATA_ENRICHMENT_DLQ="calytics-be-${STAGE}-data-enrichment-dlq.fifo"
 QUEUE_BE_CLIENT_CALLBACK="calytics-be-${STAGE}-client-callback"
 QUEUE_BE_CLIENT_CALLBACK_DLQ="calytics-be-${STAGE}-client-callback-dlq"
+QUEUE_BE_DG_HOUSEKEEPING="calytics-be-${STAGE}-dg-housekeeping"
+QUEUE_BE_DG_HOUSEKEEPING_DLQ="calytics-be-${STAGE}-dg-housekeeping-dlq"
 QUEUE_BE_DEAD_LETTER="calytics-be-${STAGE}-dead-letter.fifo"
 QUEUE_BE_JOBS="calytics-be-${STAGE}-jobs"
 QUEUE_A2A_DATA_ENRICHMENT="calytics-a2a-${STAGE}-data-enrichment.fifo"
@@ -286,6 +288,7 @@ CANARY_SQS_QUEUE="$QUEUE_BE_DATA_ENRICHMENT"
 # is caught for any service, not just BE.
 CANARY_SQS_QUEUES=(
   "$QUEUE_BE_DATA_ENRICHMENT"
+  "$QUEUE_BE_DG_HOUSEKEEPING"
   "$QUEUE_A2A_DATA_ENRICHMENT"
   "$QUEUE_CROSS_PRODUCT_TRANSPORTER"
 )
