@@ -103,6 +103,10 @@ const server = http.createServer(async (req, res) => {
                 createdByClientId: u.createdByClientId ?? 'seed',
                 // real finAPI scopes users per mandator; default: a2a- prefix -> M2, rest M1
                 mandator: u.mandator ?? (u.id.startsWith('a2a-') ? 2 : 1),
+                // expiry-release QA: per-user consent fixtures for GET /api/v2/bankConnections
+                // [{status:'PRESENT'|'NOT_PRESENT', expiresAt?: ISO, userActionRequired?: bool}]
+                consents: u.consents,
+                bankConnectionsError: u.bankConnectionsError, // HTTP code to fail the consent read
             });
         }
         return json(res, 200, { ok: true, count: users.length });
@@ -165,6 +169,28 @@ const server = http.createServer(async (req, res) => {
         user.deleted = true;
         user.deletedByClientId = who.clientId;
         return json(res, 200, {});
+    }
+
+    // ── bank connections (consent truth surface) ──────────────────────────
+    if (url.pathname === '/api/v2/bankConnections' && req.method === 'GET') {
+        if (!who || who.kind !== 'user') {
+            return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'invalid token' }] });
+        }
+        const user = state.users.get(who.userId);
+        if (!user || user.deleted) return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'user gone' }] });
+        if (user.bankConnectionsError) {
+            return json(res, user.bankConnectionsError, { errors: [{ code: 'ERROR', message: `fault ${user.bankConnectionsError}` }] });
+        }
+        const consents = user.consents ?? [];
+        return json(res, 200, {
+            connections: consents.length === 0 ? [] : [{
+                id: 1,
+                interfaces: consents.map((c) => ({
+                    aisConsent: { status: c.status, ...(c.expiresAt && { expiresAt: c.expiresAt }) },
+                    userActionRequired: c.userActionRequired === true,
+                })),
+            }],
+        });
     }
 
     // ── mandator admin ──────────────────────────────────────────────────────
