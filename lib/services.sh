@@ -35,7 +35,10 @@ cmd_path()    { echo "$CAL_ROOT/commands/${1}.sh"; }
 seeder_path() { echo "$CAL_ROOT/seeders/${1}.sh"; }
 
 # ── Cross-script runners ────────────────────────────────────────
-run_cmd()    { source "$(cmd_path "$1")" "${@:2}"; }
+# `source script` with no extra args inherits the caller's positional parameters.
+# Without the explicit shift+"$@", `run_cmd status` would leave $1="status" inside
+# the sourced script, which then tries to resolve "status" as a service alias and fails.
+run_cmd()    { local cmd="$1"; shift; source "$(cmd_path "$cmd")" "$@"; }
 run_seeder() { bash "$(seeder_path "$1")"; }
 
 # ── Infra dependency check ───────────────────────────────────────
