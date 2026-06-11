@@ -300,28 +300,49 @@ start_docker_service() {
   fi
 }
 
+# Kill a process and all of its descendants (children first)
+kill_tree() {
+  local pid="$1" child
+  for child in $(pgrep -P "$pid" 2>/dev/null); do kill_tree "$child"; done
+  kill -9 "$pid" 2>/dev/null || true
+}
+
+# Kill a service's process tree by repo-path pattern. Catches mid-startup
+# trees whose port isn't bound yet (npm build phase) and portless services.
+# Matches are filtered to known runtimes so an editor or shell that merely
+# has the repo path in its argv is never touched.
+kill_service_pattern() {
+  local dir="$1" pid cmd killed=1
+  # Trailing slash so "/calytics-be/" never matches calytics-be-admin paths
+  for pid in $(pgrep -f "/${dir}/" 2>/dev/null); do
+    cmd=$(ps -o comm= -p "$pid" 2>/dev/null | sed 's|.*/||')
+    case "$cmd" in
+      node|npm|npx|sh|bash|tsx|serverless*|esbuild*)
+        kill_tree "$pid"
+        killed=0
+        ;;
+    esac
+  done
+  return $killed
+}
+
 # Stop a process-managed service
 stop_process_service() {
   local svc="$1"
   local port="${SVC_PORT[$svc]}"
   local label="${SVC_LABEL[$svc]}"
+  local dir="${SVC_DIR[$svc]}"
 
-  if [ "$port" -gt 0 ]; then
-    if port_is_busy "$port"; then
-      kill_port "$port"
-      ok "$label stopped (port $port)"
-    else
-      dim "$label not running"
-    fi
+  if [ "$port" -gt 0 ] && port_is_busy "$port"; then
+    # Running service: kill the port-holder; parents (npm/sh) exit with it
+    kill_port "$port"
+    ok "$label stopped (port $port)"
+  elif kill_service_pattern "$dir"; then
+    # Port not bound: the service is either portless (rs) or still mid-startup
+    # (npm build before serverless binds) — sweep the tree by repo path
+    ok "$label stopped (startup tree)"
   else
-    # No port (e.g. risk-scoring) — kill by process pattern
-    local dir="${SVC_DIR[$svc]}"
-    if pgrep -f "$dir" &>/dev/null; then
-      pgrep -f "$dir" | xargs kill -9 2>/dev/null || true
-      ok "$label stopped"
-    else
-      dim "$label not running"
-    fi
+    dim "$label not running"
   fi
 }
 
