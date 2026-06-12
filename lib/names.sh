@@ -41,6 +41,7 @@ declare -A SVC_PORT=(
   [docs]=8080
   [dynamo-gui]=8001
   [webhooks]=8090
+  [finapi-mock]=4010
 )
 
 # ── Service directories (relative to project root) ───────────────
@@ -62,6 +63,7 @@ declare -A SVC_CONTAINER=(
   [docs]=calytics_docs
   [dynamo-gui]=dynamodb-gui
   [webhooks]=calytics-webhook-tester
+  [finapi-mock]=calytics_finapi_mock
 )
 
 # ── Start commands ───────────────────────────────────────────────
@@ -94,6 +96,7 @@ declare -A SVC_LABEL=(
   [docs]="API docs"
   [dynamo-gui]="DynamoDB GUI"
   [webhooks]="Webhook Tester"
+  [finapi-mock]="finAPI mock"
 )
 
 # ── Service URLs ─────────────────────────────────────────────────
@@ -108,6 +111,7 @@ declare -A SVC_URL=(
   [docs]="http://localhost:${SVC_PORT[docs]}"
   [dynamo-gui]="http://localhost:${SVC_PORT[dynamo-gui]}"
   [webhooks]="http://localhost:${SVC_PORT[webhooks]}"
+  [finapi-mock]="http://localhost:${SVC_PORT[finapi-mock]}"
 )
 
 # ── Service categorization ───────────────────────────────────────
@@ -115,10 +119,10 @@ declare -A SVC_URL=(
 # orchestrator: Payment Reconciliation lives here, Dispute Recognition lives here.
 # Producers (be, a2a) publish to its SQS queue; this lambda consumes + processes.
 SVC_PROCESS_LIST=(be a2a cp rs rs-api)
-SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks)
-SVC_ALL_LIST=(be a2a cp rs rs-api admin fe docs dynamo-gui webhooks)
+SVC_DOCKER_LIST=(admin fe docs dynamo-gui webhooks finapi-mock)
+SVC_ALL_LIST=(be a2a cp rs rs-api admin fe docs dynamo-gui webhooks finapi-mock)
 SVC_INFRA_DEPENDENT=(be a2a cp rs rs-api admin fe)
-SVC_INDEPENDENT=(docs dynamo-gui webhooks)
+SVC_INDEPENDENT=(docs dynamo-gui webhooks finapi-mock)
 
 # Services whose start command invokes Serverless Framework v4, which phones
 # home to api.serverless.com on every run. `start_process_service` uses this

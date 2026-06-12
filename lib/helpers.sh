@@ -280,6 +280,7 @@ start_docker_service() {
     docs)      compose_name="docs" ;;
     dynamo-gui) compose_name="dynamo-gui" ;;
     webhooks)  compose_name="webhook-tester" ;;
+    finapi-mock) compose_name="finapi-mock" ;;
   esac
 
   # Start via compose (all profiles so any service can be targeted).

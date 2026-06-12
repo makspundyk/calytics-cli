@@ -1,0 +1,7 @@
+# Stateful finAPI mock as a compose service on the calytics network.
+# Built from a context (not bind-mounted): WSL paths can't be runtime-mounted
+# through Docker Desktop, but build contexts transfer fine.
+FROM node:20-alpine
+COPY finapi-mock-server.js /finapi-mock-server.js
+EXPOSE 4010
+CMD ["node", "/finapi-mock-server.js", "4010"]

@@ -21,6 +21,7 @@ svc_resolve() {
     docs)                      echo "docs" ;;
     dynamo-gui|dynamo|dg-ui)   echo "dynamo-gui" ;;
     webhooks|webhook|wh)       echo "webhooks" ;;
+    finapi-mock|mock|finapi)   echo "finapi-mock" ;;
     *) return 1 ;;
   esac
 }

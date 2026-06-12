@@ -167,6 +167,7 @@ cal morning                   # Fetch repos + system check + start everything
 | `docs` | API docs | 8080 |
 | `dynamo-gui` | DynamoDB admin | 8001 |
 | `webhooks` | Webhook tester (UI + file persistence) | 8090 |
+| `finapi-mock` | Stateful finAPI mock for lifecycle/cleanup QA (`tools/finapi-mock-server.js`; aliases `mock`, `finapi`) | 4010 |
 
 ### Webhook Tester
 

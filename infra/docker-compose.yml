@@ -148,6 +148,20 @@ services:
     networks:
       - calytics-net
 
+  # Stateful finAPI mock (tools/finapi-mock-server.js) — reachable as
+  # http://finapi-mock:4010 from other containers (be-admin QA) and
+  # http://localhost:4010 from host processes (a2a/be serverless-offline).
+  finapi-mock:
+    build:
+      context: ../tools
+      dockerfile: Dockerfile.finapi-mock
+    container_name: calytics_finapi_mock
+    ports:
+      - "4010:4010"
+    profiles: ["tools"]
+    networks:
+      - calytics-net
+
 volumes:
   webhook_data:
   localstack_data:

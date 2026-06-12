@@ -106,6 +106,7 @@ cat << 'EOF'
     docs        API docs                :8080
     dynamo-gui  DynamoDB admin web UI   :8001
     webhooks    Webhook tester (UI)    :8090
+    finapi-mock Stateful finAPI mock   :4010
 
   DEPLOY vs BUILD
     deploy = infrastructure + terraform + database + seeds + start services
