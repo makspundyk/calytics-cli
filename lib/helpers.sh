@@ -282,8 +282,12 @@ start_docker_service() {
     webhooks)  compose_name="webhook-tester" ;;
   esac
 
-  # Start via compose (all profiles so any service can be targeted)
-  dc --profile app --profile docs --profile tools up --build -d "$(
+  # Start via compose (all profiles so any service can be targeted).
+  # --renew-anon-volumes: the app services bind-mount the repo and keep
+  # node_modules in an anonymous volume; without -V a recreate keeps the OLD
+  # volume and the container runs stale dependencies even after a rebuild
+  # with a changed lockfile.
+  dc --profile app --profile docs --profile tools up --build -d --renew-anon-volumes "$(
     echo "$compose_name"
   )" 2>/dev/null
   ok "$label started"
