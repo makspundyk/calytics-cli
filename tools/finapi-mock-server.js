@@ -240,7 +240,12 @@ const server = http.createServer(async (req, res) => {
             userId: u.deleted ? gdprMask(u.id) : u.id,
             registrationDate: u.registrationDate,
         }));
-        return json(res, 200, { users: slice });
+        // paging.totalCount = the real count finAPI has; reconcile uses it to
+        // detect a PARTIAL response. Fault `getUserListInflateTotal:N` reports
+        // N extra (returns the same users) to simulate a truncated/partial list.
+        const inflate = state.faults.getUserListInflateTotal ?? 0;
+        const totalCount = users.length + inflate;
+        return json(res, 200, { users: slice, paging: { page, perPage, pageCount: Math.max(1, Math.ceil(users.length / perPage)), totalCount } });
     }
     if (url.pathname === '/api/v2/mandatorAdmin/deleteUsers' && req.method === 'POST') {
         const { userIds = [] } = parseForm(body, 'json');
