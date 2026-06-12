@@ -254,11 +254,11 @@ const server = http.createServer(async (req, res) => {
     // ── webforms (eager-creation flow checks) ───────────────────────────────
     // Web Form 2.0 standalone payment (A2A checkout draft-payment flow).
     if (url.pathname === '/api/webForms/standalonePayment' && req.method === 'POST') {
-        const id = `mock-wf-${Date.now()}`;
+        const id = require('crypto').randomUUID();
         return json(res, 201, { id, url: `http://localhost:${PORT}/webform/${id}`, expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() });
     }
     if (url.pathname === '/api/webForms/bankConnectionImport' && req.method === 'POST') {
-        const id = `mock-wf-${Date.now()}`;
+        const id = require('crypto').randomUUID();
         return json(res, 201, { id, url: `http://localhost:${PORT}/webform/${id}`, expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() });
     }
     if (url.pathname.startsWith('/api/webForms/')) {
