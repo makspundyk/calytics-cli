@@ -24,7 +24,9 @@ const state = {
     users: new Map(), // id -> {id, password, registrationDate, deleted, createdByClientId, mandator}
     tokens: new Map(), // token -> {kind:'client'|'user', clientId?, userId?}
     audit: [], // {ts, method, path, clientId, userId, grant, body}
-    faults: {}, // userId -> statusCode for DELETE
+    faults: {}, // userId -> statusCode for DELETE; oauthPassword -> {status, remaining} for password grants
+    payments: new Map(), // id(number) -> {id, statusV2, status, bankMessage?}
+    webforms: new Map(), // id -> {id, status, payload}
 };
 
 // client_id -> mandator label, mirrors the local secret seeded by the QA run
@@ -32,6 +34,7 @@ const MANDATOR_BY_CLIENT = {
     'admin-m2-client-id': 2,
     'admin-m1-client-id': 1,
     '454ecb6c-0ee4-4505-a7f5-ca9907366eee': 1, // regular fallback client (M1 in prod topology)
+    'a2a-m2-client-id': 2, // M2 regular client (a2a_client_id in the prod secret topology)
 };
 
 function gdprMask(id) {
@@ -90,10 +93,18 @@ const server = http.createServer(async (req, res) => {
         state.tokens.clear();
         state.audit.length = 0;
         state.faults = {};
+        state.payments.clear();
+        state.webforms.clear();
         return json(res, 200, { ok: true });
     }
     if (url.pathname === '/__seed' && req.method === 'POST') {
-        const { users = [] } = JSON.parse(body || '{}');
+        const { users = [], payments = [], webforms = [] } = JSON.parse(body || '{}');
+        for (const p of payments) {
+            state.payments.set(Number(p.id), { id: Number(p.id), statusV2: p.statusV2 ?? 'PENDING', status: p.status ?? p.statusV2 ?? 'PENDING', bankMessage: p.bankMessage });
+        }
+        for (const wf of webforms) {
+            state.webforms.set(wf.id, { id: wf.id, status: wf.status ?? 'NOT_YET_OPENED', payload: wf.payload ?? {} });
+        }
         for (const u of users) {
             state.users.set(u.id, {
                 id: u.id,
@@ -131,8 +142,18 @@ const server = http.createServer(async (req, res) => {
             state.audit[state.audit.length - 1].grant = 'password';
             state.audit[state.audit.length - 1].userId = form.username;
             state.audit[state.audit.length - 1].clientId = form.client_id;
-            if (!user || user.deleted || user.password !== form.password) {
-                return json(res, 400, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'Invalid user credentials' }] });
+            // transient-outage injection: {oauthPassword:{status:500,remaining:N}} via /__faults
+            const oauthFault = state.faults.oauthPassword;
+            if (oauthFault && oauthFault.remaining > 0) {
+                oauthFault.remaining--;
+                return json(res, oauthFault.status ?? 500, { errors: [{ code: 'SERVER_ERROR', message: `injected ${oauthFault.status ?? 500}` }] });
+            }
+            // real finAPI: a user is owned by the client that created it — a grant under any
+            // other client (e.g. wrong mandator) is byte-identical to a deleted user
+            // (UNAUTHORIZED_ACCESS "Bad credentials"; proven live 2026-06-12).
+            const ownedByCaller = !user?.createdByClientId || user.createdByClientId === 'seed' || user.createdByClientId === form.client_id;
+            if (!user || user.deleted || user.password !== form.password || !ownedByCaller) {
+                return json(res, 400, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'Bad credentials' }] });
             }
             const token = `tok-user-${form.username}`;
             state.tokens.set(token, { kind: 'user', userId: form.username, clientId: form.client_id });
@@ -169,6 +190,18 @@ const server = http.createServer(async (req, res) => {
         user.deleted = true;
         user.deletedByClientId = who.clientId;
         return json(res, 200, {});
+    }
+
+    // ── payments (re-poll truth surface) ────────────────────────────────────
+    if (url.pathname === '/api/v2/payments' && req.method === 'GET') {
+        if (!who || who.kind !== 'user') {
+            return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'invalid token' }] });
+        }
+        // axios serializes {ids:[n]} as ids[]=n; plain clients may send ids=n or ids=[n]
+        const rawIds = [...url.searchParams.getAll('ids'), ...url.searchParams.getAll('ids[]')].join(',');
+        const ids = rawIds.replace(/[\[\]]/g, '').split(',').filter(Boolean).map(Number);
+        const payments = ids.map((id) => state.payments.get(id)).filter(Boolean);
+        return json(res, 200, { payments });
     }
 
     // ── bank connections (consent truth surface) ──────────────────────────
@@ -229,7 +262,10 @@ const server = http.createServer(async (req, res) => {
         return json(res, 201, { id, url: `http://localhost:${PORT}/webform/${id}`, expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() });
     }
     if (url.pathname.startsWith('/api/webForms/')) {
-        return json(res, 200, { id: url.pathname.split('/').pop(), status: 'NOT_YET_OPENED', payload: {} });
+        const wfId = url.pathname.split('/').pop();
+        const seeded = state.webforms.get(wfId);
+        if (seeded) return json(res, 200, seeded);
+        return json(res, 200, { id: wfId, status: 'NOT_YET_OPENED', payload: {} });
     }
 
     json(res, 404, { errors: [{ code: 'NOT_FOUND', message: url.pathname }] });
