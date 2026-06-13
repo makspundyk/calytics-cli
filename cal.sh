@@ -129,3 +129,12 @@ if [ -n "${ZSH_VERSION:-}" ]; then
   autoload -U +X bashcompinit && bashcompinit
 fi
 complete -F _cal_completions cal 2>/dev/null || true
+
+# When EXECUTED directly (`./cal.sh start infra`, `bash cal.sh seed a2a-tables`)
+# rather than sourced, dispatch to the cal function so the CLI works either way.
+# Executed: the shebang runs this under bash, so BASH_SOURCE[0] == $0 → dispatch.
+# Sourced (into a bash or zsh shell): BASH_SOURCE[0] != $0 (or unset under zsh),
+# so this never fires on `source cal.sh` — it only defines the function, as before.
+if [ -n "${BASH_SOURCE:-}" ] && [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+  cal "$@"
+fi

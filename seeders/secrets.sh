@@ -179,10 +179,21 @@ fi
 # -----------------------------------------------------------------------------
 print_header "A2A FinAPI Credentials"
 
-# Static credentials: sandbox client ID/secret, URLs, encryption key, webform callback secret
+# Static credentials — structure mirrors the sandbox secret
+# (calytics/a2a/sandbox/finapi/static-credentials): client_id/client_secret (M1
+# regular), a2a_client_id/secret (M2 regular, A2A payments), admin_client_id/secret
+# (M2 mandator-admin), mandate_ais_admin_client_id/secret (M1 mandator-admin),
+# encryption_key (AES-256-GCM at-rest), webform_callback_secret.
+#
+# LOCAL differs from sandbox in two deliberate ways:
+#  - URLs point at the local finAPI mock (`cal start finapi-mock`, :4010), not
+#    sandbox.finapi.io, so the full A2A flow runs offline + supports fault injection.
+#  - client-id VALUES are the mock's recognised ids (see MANDATOR_BY_CLIENT in
+#    tools/finapi-mock-server.js) so mandator scoping (M1/M2) works locally; the
+#    mock does NOT validate client_secret, so those are non-secret placeholders.
 create_secret \
     "calytics/a2a/local/finapi/static-credentials" \
-    '{"client_id":"454ecb6c-0ee4-4505-a7f5-ca9907366eee","client_secret":"e7b4afd1-2373-4884-84c0-f17fea2b6ced","base_url":"https://sandbox.finapi.io","webform_base_url":"https://webform-sandbox.finapi.io","encryption_key":"rYRNwV/OpPP8eFC8VusLk4+ZsUWhHAayPvEN+1WiB30=","webform_callback_secret":"test-callback-secret"}'
+    '{"client_id":"454ecb6c-0ee4-4505-a7f5-ca9907366eee","client_secret":"local-mock-client-secret","a2a_client_id":"a2a-m2-client-id","a2a_client_secret":"local-mock-a2a-secret","admin_client_id":"admin-m2-client-id","admin_client_secret":"local-mock-admin-secret","mandate_ais_admin_client_id":"admin-m1-client-id","mandate_ais_admin_client_secret":"local-mock-mandate-ais-admin-secret","base_url":"http://localhost:4010","webform_base_url":"http://localhost:4010","encryption_key":"rYRNwV/OpPP8eFC8VusLk4+ZsUWhHAayPvEN+1WiB30=","webform_callback_secret":"test-callback-secret"}'
 
 # Dynamic credentials (tokens; refreshed by the system in use)
 create_secret \
