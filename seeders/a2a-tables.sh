@@ -130,6 +130,25 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
   --key-schema AttributeName=PK,KeyType=HASH AttributeName=SK,KeyType=RANGE
 "
 
+# Async A2A reconciliation: per-connection refresh state (DEC-031/039). PK connection_ref;
+# GSI callback-token-index (E-004 completion lookup) + sharded due-index (DEC-039/FP-21).
+AIS_REFRESH_STATE_TABLE="${AIS_CONNECTION_REFRESH_STATE_TABLE_NAME:-calytics-a2a-local-ais-connection-refresh-state}"
+ensure_table "$AIS_REFRESH_STATE_TABLE" "
+aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
+  --table-name $AIS_REFRESH_STATE_TABLE \
+  --billing-mode PAY_PER_REQUEST \
+  --attribute-definitions \
+    AttributeName=connection_ref,AttributeType=S \
+    AttributeName=current_callback_token,AttributeType=S \
+    AttributeName=due_bucket,AttributeType=S \
+    AttributeName=next_refresh_at,AttributeType=N \
+  --key-schema AttributeName=connection_ref,KeyType=HASH \
+  --global-secondary-indexes '[
+    {\"IndexName\": \"callback-token-index\", \"KeySchema\": [{\"AttributeName\": \"current_callback_token\", \"KeyType\": \"HASH\"}], \"Projection\": {\"ProjectionType\": \"ALL\"}},
+    {\"IndexName\": \"due-index\", \"KeySchema\": [{\"AttributeName\": \"due_bucket\", \"KeyType\": \"HASH\"}, {\"AttributeName\": \"next_refresh_at\", \"KeyType\": \"RANGE\"}], \"Projection\": {\"ProjectionType\": \"ALL\"}}
+  ]'
+"
+
 # -----------------------------------------------------------------------------
 # Calytics Collect tables (stage "local" -> calytics-cc-local-*)
 # -----------------------------------------------------------------------------
