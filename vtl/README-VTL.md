@@ -9,7 +9,7 @@ This guide helps you add Velocity Template Language (VTL) scripts to your API Ga
 ### Step 1: List Your APIs
 
 ```bash
-cd /home/unknown/projects/calytics/scripts/vtl
+cd /Users/max/station/projects/calytics/scripts/vtl
 ./vtl-helper.sh list-apis
 ```
 

@@ -6,7 +6,7 @@ When running `serverless offline` locally for `calytics-be`, the banking orchest
 
 ```
 Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@infrastructure/dispute-recognition' imported from
-/home/unknown/projects/calytics/calytics-be/src/domains/banking/services/banking_orchestrator_service.ts
+/Users/max/station/projects/calytics/calytics-be/src/domains/banking/services/banking_orchestrator_service.ts
 
     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:268:9)
     at packageResolve (node:internal/modules/esm/resolve:768:81)
@@ -316,7 +316,7 @@ Even after fixing the `build:` YAML structure, the dynamic `import()` still fail
 
 ```
 Error [ERR_MODULE_NOT_FOUND]: Cannot find module
-'/home/unknown/projects/calytics/calytics-be/node_modules/@calytics/ais-connection/dist/index.js'
+'/Users/max/station/projects/calytics/calytics-be/node_modules/@calytics/ais-connection/dist/index.js'
 ```
 
 This is a separate issue from the esbuild config bug.
@@ -429,9 +429,9 @@ This chapter documents the third (and most insidious) bug in the local developme
 
 ```
 TypeError: instance[setLevelSym] is not a function
-    at pino (/home/unknown/projects/calytics/calytics-be/node_modules/pino/pino.js:207:24)
+    at pino (/Users/max/station/projects/calytics/calytics-be/node_modules/pino/pino.js:207:24)
     at ../../../calytics-payment-reconciliation/dist/shared/utils/pino_logger.js
-      (/home/unknown/projects/calytics/calytics-be/node_modules/@calytics-sdk/payment-reconciliation/dist/shared-module.js:356:37)
+      (/Users/max/station/projects/calytics/calytics-be/node_modules/@calytics-sdk/payment-reconciliation/dist/shared-module.js:356:37)
 ```
 
 This error did **not** appear on production, sandbox, or even in standalone Node.js tests. It appeared **only** inside the Serverless Framework v4 (SLS v4) serverless-offline Lambda emulator.
@@ -480,7 +480,7 @@ So `import("@infrastructure/dispute-recognition/adapters/CalyticsPaymentReconcil
 **Evidence:** Removing all shims produces:
 ```
 Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@infrastructure/dispute-recognition'
-imported from /home/unknown/projects/calytics/calytics-be/src/domains/banking/services/banking_orchestrator_service.ts
+imported from /Users/max/station/projects/calytics/calytics-be/src/domains/banking/services/banking_orchestrator_service.ts
 ```
 
 Note the `.ts` source path — confirming SLS v4 runs source directly, not bundled output.

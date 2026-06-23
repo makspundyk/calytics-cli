@@ -14,7 +14,7 @@ This folder contains all tools and documentation for managing VTL (Velocity Temp
 ## 🚀 Quick Start
 
 ```bash
-cd /home/unknown/projects/calytics/scripts/vtl
+cd /Users/max/station/projects/calytics/scripts/vtl
 ./vtl-helper.sh list-apis
 ```
 

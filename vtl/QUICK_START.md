@@ -5,7 +5,7 @@
 ### Step 1: Identify Your API and Endpoint
 
 ```bash
-cd /home/unknown/projects/calytics/scripts/vtl
+cd /Users/max/station/projects/calytics/scripts/vtl
 # List all your APIs
 ./vtl-helper.sh list-apis
 

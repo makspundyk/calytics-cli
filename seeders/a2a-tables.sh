@@ -150,6 +150,41 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
 "
 
 # -----------------------------------------------------------------------------
+# Payment reconciliation: reconcilable-transactions (PR rows) + match-conflicts.
+# transaction_date is NUMBER (N) — the client-tx-date-index range key MUST be N
+# (prod GSI bug was S, rejecting every Number write; keep local correct).
+# -----------------------------------------------------------------------------
+RECONCILABLE_TRANSACTIONS_TABLE="${RECONCILABLE_TRANSACTIONS_TABLE_NAME:-calytics-shared-local-reconcilable-transactions}"
+ensure_table "$RECONCILABLE_TRANSACTIONS_TABLE" "
+aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
+  --table-name $RECONCILABLE_TRANSACTIONS_TABLE \
+  --billing-mode PAY_PER_REQUEST \
+  --attribute-definitions \
+    AttributeName=mandate_id,AttributeType=S \
+    AttributeName=sk,AttributeType=S \
+    AttributeName=client_id,AttributeType=S \
+    AttributeName=tenant_id,AttributeType=S \
+    AttributeName=transaction_date,AttributeType=N \
+  --key-schema AttributeName=mandate_id,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+  --global-secondary-indexes '[
+    {\"IndexName\": \"client_id-tenant_id-index\", \"KeySchema\": [{\"AttributeName\": \"client_id\", \"KeyType\": \"HASH\"}, {\"AttributeName\": \"tenant_id\", \"KeyType\": \"RANGE\"}], \"Projection\": {\"ProjectionType\": \"ALL\"}},
+    {\"IndexName\": \"client-tx-date-index\", \"KeySchema\": [{\"AttributeName\": \"client_id\", \"KeyType\": \"HASH\"}, {\"AttributeName\": \"transaction_date\", \"KeyType\": \"RANGE\"}], \"Projection\": {\"ProjectionType\": \"ALL\"}}
+  ]'
+"
+
+# Match conflicts (DEC-062): full snapshots of ambiguous groups the matcher defers. PK conflict_id; TTL on ttl.
+MATCH_CONFLICTS_TABLE="${MATCH_CONFLICTS_TABLE_NAME:-payment-reconciliation-local-match-conflicts}"
+ensure_table "$MATCH_CONFLICTS_TABLE" "
+aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
+  --table-name $MATCH_CONFLICTS_TABLE \
+  --billing-mode PAY_PER_REQUEST \
+  --attribute-definitions AttributeName=conflict_id,AttributeType=S \
+  --key-schema AttributeName=conflict_id,KeyType=HASH
+"
+aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-time-to-live \
+  --table-name "$MATCH_CONFLICTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
+
+# -----------------------------------------------------------------------------
 # Calytics Collect tables (stage "local" -> calytics-cc-local-*)
 # -----------------------------------------------------------------------------
 CC_SESSIONS_TABLE="${CC_SESSIONS_TABLE:-calytics-cc-local-sessions}"
