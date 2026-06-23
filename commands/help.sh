@@ -61,8 +61,9 @@ cat << 'EOF'
     cal seed api-keys             API keys (DB + API Gateway + encryption)
     cal seed ses                  Verify SES email identity
     cal seed a2a-tables           A2A + Calytics Collect DynamoDB tables
-    cal seed a2a-payments         Lifecycle-coverage A2A payment fixture rows
+    cal seed a2a-payments         A2A payments + reconciliation PR/base-tx rows + match-conflict
     cal seed cross-product-tables Cross-product DDB tables (worker-tasks, returns-log)
+    cal seed dg-data              DebitGuard transactions + verifications (FE Secure Direct Debits)
 
   MIGRATE
     cal migrate run               Run next pending PostgreSQL migration

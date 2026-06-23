@@ -89,7 +89,7 @@ _cal_completions() {
         COMPREPLY=($(compgen -W "be a2a cp rs rs-api admin fe docs dynamo-gui webhooks finapi-mock infra" -- "$cur"))
         ;;
       seed)
-        COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables a2a-payments cross-product-tables" -- "$cur"))
+        COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables a2a-payments cross-product-tables dg-data" -- "$cur"))
         ;;
       build)
         COMPREPLY=($(compgen -W "shared shims be admin a2a cp docs" -- "$cur"))

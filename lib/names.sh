@@ -256,6 +256,7 @@ SEEDER_API_KEYS="api-keys"
 SEEDER_A2A_TABLES="a2a-tables"
 SEEDER_A2A_PAYMENTS="a2a-payments"
 SEEDER_CROSS_PRODUCT_TABLES="cross-product-tables"
+SEEDER_DG_DATA="dg-data"
 
 # Ordered list for `cal seed all` — webhooks excluded (auto-seeded by cal start webhooks)
 SEEDER_ALL_LIST=(
@@ -267,6 +268,7 @@ SEEDER_ALL_LIST=(
   "$SEEDER_API_KEYS"
   "$SEEDER_CROSS_PRODUCT_TABLES"
   "$SEEDER_A2A_PAYMENTS"
+  "$SEEDER_DG_DATA"
 )
 
 # ── Stream subscriber (remote env → local scoring) ──────────────

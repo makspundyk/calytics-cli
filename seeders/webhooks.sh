@@ -110,7 +110,10 @@ encrypt_webhook_secret() {
 
 # Step 1: Get client ID by email
 print_info "Step 1: Getting client ID for email: $CLIENT_EMAIL"
-CLIENT_ID=$(psql_exec "SELECT id FROM clients WHERE email = '$CLIENT_EMAIL';")
+# CPM refactor (Jun 2026): client login identity moved out of `clients` into the
+# `users` table. `clients.email` was dropped; the login email now lives on the
+# CLIENTS_ADMIN user, linked to its client via the `user_clients` join table.
+CLIENT_ID=$(psql_exec "SELECT uc.client_id FROM user_clients uc JOIN users u ON u.user_id = uc.user_id WHERE u.email = '$CLIENT_EMAIL' LIMIT 1;")
 
 if [ -z "$CLIENT_ID" ]; then
     print_error "Client with email $CLIENT_EMAIL not found!"

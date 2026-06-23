@@ -15,9 +15,10 @@
 #   a2a-tables          Create A2A + CC DynamoDB tables
 #   a2a-payments        Seed lifecycle-coverage A2A payment fixture rows
 #   cross-product-tables Create cross-product DynamoDB tables (worker-tasks, returns-log)
+#   dg-data             Seed DebitGuard transactions + verifications (FE Secure Direct Debits page)
 
 target="${1:-}"
-[ -z "$target" ] && fail "Usage: cal seed <target> (all, secrets, queues, client, admins, webhooks, plans, api-keys, ses, a2a-tables, a2a-payments, cross-product-tables)"
+[ -z "$target" ] && fail "Usage: cal seed <target> (all, secrets, queues, client, admins, webhooks, plans, api-keys, ses, a2a-tables, a2a-payments, cross-product-tables, dg-data)"
 
 _seed() {
   script="$(seeder_path "$1")"

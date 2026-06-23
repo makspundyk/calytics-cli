@@ -44,10 +44,13 @@ print_success() { echo -e "${GREEN}✓${NC}  $1"; }
 print_warn()    { echo -e "${YELLOW}⚠${NC}  $1"; }
 print_error()   { echo -e "${RED}✗${NC}  $1"; }
 
-# Returns 0 if main client exists, 1 otherwise
+# Returns 0 if main client exists, 1 otherwise.
+# CPM refactor (Jun 2026): `clients.email` was dropped. The login email now lives
+# on the client's CLIENTS_ADMIN user, linked via the `user_clients` join table —
+# matching be-admin's findClientByAdminEmail (users.email -> first user_clients row).
 main_client_exists() {
     local id
-    id=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -q -c "SELECT id FROM clients WHERE email = '$MAIN_CLIENT_EMAIL';" 2>/dev/null) || true
+    id=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -q -c "SELECT uc.client_id FROM user_clients uc JOIN users u ON u.user_id = uc.user_id WHERE u.email = '$MAIN_CLIENT_EMAIL' LIMIT 1;" 2>/dev/null) || true
     [ -n "$id" ]
 }
 
@@ -81,16 +84,13 @@ ensure_main_client() {
     fi
 }
 
-# Set service_email on main client's API settings (for mandate PDF notifications)
+# service_email used to live on client_api_settings (for mandate PDF notifications).
+# It was removed from client_api_settings and now belongs to the separate
+# service_contracts (merchant-profile) domain, which is managed via the be-admin API
+# (per-merchant + per-product), not seeded here and not required for local FE/data.
+# Kept as an explicit, non-breaking no-op so the removal is documented in one place.
 ensure_main_client_service_email() {
-    local updated
-    updated=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -q -c \
-        "UPDATE client_api_settings SET service_email = '$MAIN_CLIENT_SERVICE_EMAIL' WHERE client_id = (SELECT id FROM clients WHERE email = '$MAIN_CLIENT_EMAIL'); SELECT COUNT(*) FROM client_api_settings WHERE client_id = (SELECT id FROM clients WHERE email = '$MAIN_CLIENT_EMAIL') AND service_email = '$MAIN_CLIENT_SERVICE_EMAIL';" 2>/dev/null) || true
-    if [ -n "$updated" ] && [ "${updated:-0}" -gt 0 ]; then
-        print_success "Main client API settings: service_email set to $MAIN_CLIENT_SERVICE_EMAIL"
-    else
-        print_info "Main client API settings: no row to update (run seed-webhooks-and-api-settings.sh to create API settings, or service_email already set)"
-    fi
+    print_info "Skipping service_email seed: client_api_settings.service_email was removed in the CPM refactor; service emails now live in the service_contracts API (not part of local seed data)."
 }
 
 # Main

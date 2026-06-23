@@ -1,0 +1,377 @@
+[
+  {
+    "tenant_id": {
+      "S": "local-test-002"
+    },
+    "transaction_status": {
+      "S": "SUCCESS"
+    },
+    "failed_verification_id": {
+      "NULL": true
+    },
+    "payment_information": {
+      "M": {
+        "amount": {
+          "N": "89.99"
+        },
+        "currency": {
+          "S": "EUR"
+        },
+        "method": {
+          "S": "Transfer"
+        },
+        "provider": {
+          "S": "adyen"
+        }
+      }
+    },
+    "reconcilable_transaction_id": {
+      "S": "865171be-afe9-4844-b3d4-b9de4e6feb9d"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:39:38.850Z"
+    },
+    "callback_delivered": {
+      "BOOL": false
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "expected_verifications": {
+      "L": [
+        {
+          "S": "VOP_CHECK"
+        }
+      ]
+    },
+    "resolved_by": {
+      "S": "VENDOR_API"
+    },
+    "callback_sent": {
+      "BOOL": true
+    },
+    "GSI3SK": {
+      "S": "2026-06-11T13:39:38.850Z"
+    },
+    "SK": {
+      "S": "TRANSACTION#40e2b29a-5dba-48ab-b371-2259e13e4f7e"
+    },
+    "payment_tracking_enabled": {
+      "BOOL": false
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "40e2b29a-5dba-48ab-b371-2259e13e4f7e"
+    },
+    "transaction_code": {
+      "NULL": true
+    },
+    "callback_sent_at": {
+      "NULL": true
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__#GROUP#match-tests"
+    },
+    "GSI2PK": {
+      "S": "REQUEST:6AA66BF4-DDC8-4857-AE31-66EFA321CCC4"
+    },
+    "ip_address": {
+      "S": "91.183.45.12"
+    },
+    "tenant_group": {
+      "S": "match-tests"
+    },
+    "country_code": {
+      "S": "BE"
+    },
+    "service_type": {
+      "S": "DEBIT_GUARD"
+    },
+    "transaction_service_status": {
+      "S": "DG_CHECK_RESULT_MATCH"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#6AA66BF4-DDC8-4857-AE31-66EFA321CCC4"
+    },
+    "customer_information": {
+      "M": {
+        "country": {
+          "S": "BE"
+        },
+        "address": {
+          "S": "Rue de la Loi 16, Brussels"
+        },
+        "age": {
+          "N": "28"
+        },
+        "email": {
+          "S": "petro.k@example.be"
+        }
+      }
+    },
+    "callback_delivered_at": {
+      "NULL": true
+    },
+    "correlation_id": {
+      "S": "6AA66BF4-DDC8-4857-AE31-66EFA321CCC4"
+    },
+    "PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "entity": {
+      "S": "Transaction"
+    }
+  },
+  {
+    "tenant_id": {
+      "S": "local-test-001"
+    },
+    "transaction_status": {
+      "S": "SUCCESS"
+    },
+    "failed_verification_id": {
+      "NULL": true
+    },
+    "payment_information": {
+      "M": {
+        "amount": {
+          "N": "250"
+        },
+        "currency": {
+          "S": "EUR"
+        },
+        "method": {
+          "S": "Transfer"
+        },
+        "provider": {
+          "S": "stripe"
+        }
+      }
+    },
+    "reconcilable_transaction_id": {
+      "S": "264d07ec-9900-4be0-90b7-3d20467ae89f"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:34:36.964Z"
+    },
+    "callback_delivered": {
+      "BOOL": false
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "expected_verifications": {
+      "L": [
+        {
+          "S": "VOP_CHECK"
+        }
+      ]
+    },
+    "resolved_by": {
+      "S": "VENDOR_API"
+    },
+    "callback_sent": {
+      "BOOL": true
+    },
+    "GSI3SK": {
+      "S": "2026-06-11T13:34:36.964Z"
+    },
+    "SK": {
+      "S": "TRANSACTION#47198602-2098-4174-85a6-13c4d8a06fda"
+    },
+    "payment_tracking_enabled": {
+      "BOOL": false
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "47198602-2098-4174-85a6-13c4d8a06fda"
+    },
+    "transaction_code": {
+      "NULL": true
+    },
+    "callback_sent_at": {
+      "NULL": true
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__#GROUP#match-tests"
+    },
+    "GSI2PK": {
+      "S": "REQUEST:B318A5B6-7614-4E85-9962-86CE071A65C6"
+    },
+    "ip_address": {
+      "S": "185.220.101.42"
+    },
+    "tenant_group": {
+      "S": "match-tests"
+    },
+    "country_code": {
+      "S": "DE"
+    },
+    "service_type": {
+      "S": "DEBIT_GUARD"
+    },
+    "transaction_service_status": {
+      "S": "DG_CHECK_RESULT_MATCH"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#B318A5B6-7614-4E85-9962-86CE071A65C6"
+    },
+    "customer_information": {
+      "M": {
+        "country": {
+          "S": "DE"
+        },
+        "address": {
+          "S": "Marienplatz 1, Munich"
+        },
+        "age": {
+          "N": "35"
+        },
+        "email": {
+          "S": "felix.m@example.de"
+        }
+      }
+    },
+    "callback_delivered_at": {
+      "NULL": true
+    },
+    "correlation_id": {
+      "S": "B318A5B6-7614-4E85-9962-86CE071A65C6"
+    },
+    "PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "entity": {
+      "S": "Transaction"
+    }
+  },
+  {
+    "tenant_id": {
+      "S": "cold-start-test"
+    },
+    "transaction_status": {
+      "S": "SUCCESS"
+    },
+    "failed_verification_id": {
+      "NULL": true
+    },
+    "payment_information": {
+      "M": {
+        "amount": {
+          "N": "10"
+        },
+        "currency": {
+          "S": "EUR"
+        },
+        "method": {
+          "S": "Transfer"
+        },
+        "provider": {
+          "S": "stripe"
+        }
+      }
+    },
+    "reconcilable_transaction_id": {
+      "S": "b03a53cc-9cc5-4f07-b2ec-0f1c7139dec6"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:52:24.387Z"
+    },
+    "callback_delivered": {
+      "BOOL": false
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "expected_verifications": {
+      "L": [
+        {
+          "S": "VOP_CHECK"
+        }
+      ]
+    },
+    "resolved_by": {
+      "S": "VENDOR_API"
+    },
+    "callback_sent": {
+      "BOOL": true
+    },
+    "GSI3SK": {
+      "S": "2026-06-11T13:52:24.387Z"
+    },
+    "SK": {
+      "S": "TRANSACTION#befa5107-d7ab-4017-a8b4-0ecfb3cf905a"
+    },
+    "payment_tracking_enabled": {
+      "BOOL": false
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "befa5107-d7ab-4017-a8b4-0ecfb3cf905a"
+    },
+    "transaction_code": {
+      "NULL": true
+    },
+    "callback_sent_at": {
+      "NULL": true
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__#GROUP#smoke"
+    },
+    "GSI2PK": {
+      "S": "REQUEST:769C016A-A80D-45AC-B250-E28E2B0E5B6E"
+    },
+    "ip_address": {
+      "S": "185.220.101.42"
+    },
+    "tenant_group": {
+      "S": "smoke"
+    },
+    "country_code": {
+      "S": "DE"
+    },
+    "service_type": {
+      "S": "DEBIT_GUARD"
+    },
+    "transaction_service_status": {
+      "S": "DG_CHECK_RESULT_MATCH"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#769C016A-A80D-45AC-B250-E28E2B0E5B6E"
+    },
+    "customer_information": {
+      "M": {
+        "country": {
+          "S": "DE"
+        },
+        "address": {
+          "S": "Marienplatz 1, Munich"
+        },
+        "age": {
+          "N": "35"
+        },
+        "email": {
+          "S": "felix.m@example.de"
+        }
+      }
+    },
+    "callback_delivered_at": {
+      "NULL": true
+    },
+    "correlation_id": {
+      "S": "769C016A-A80D-45AC-B250-E28E2B0E5B6E"
+    },
+    "PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "entity": {
+      "S": "Transaction"
+    }
+  }
+]

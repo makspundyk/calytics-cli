@@ -102,8 +102,9 @@ cal seed plans                # Seed product plans + subscriptions
 cal seed api-keys             # Seed API keys
 cal seed ses                  # Verify SES email identity
 cal seed a2a-tables           # Create A2A DynamoDB tables
-cal seed a2a-payments         # Lifecycle-coverage A2A payment fixture rows
+cal seed a2a-payments         # A2A payments + reconciliation PR/base-tx rows + match-conflict (1:1 w/ live)
 cal seed cross-product-tables # Create cross-product DDB tables (worker-tasks, returns-log)
+cal seed dg-data              # DebitGuard transactions + verifications (FE Secure Direct Debits page)
 ```
 
 ### Migrate

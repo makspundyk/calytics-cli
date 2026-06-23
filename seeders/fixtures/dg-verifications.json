@@ -1,0 +1,299 @@
+[
+  {
+    "verification_service_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:34:36.964Z"
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "verification_id": {
+      "S": "c0188e4f-3744-4d10-8ee0-06c7295322ed"
+    },
+    "verification_error": {
+      "NULL": true
+    },
+    "GSI4SK": {
+      "S": "2026-06-11T13:34:36.964Z"
+    },
+    "updated_at": {
+      "S": "2026-06-11T13:34:36.964Z"
+    },
+    "verification_additional_details": {
+      "M": {
+        "verification_service_status": {
+          "S": "MATCH_RESULT_MATCH"
+        }
+      }
+    },
+    "iban_country": {
+      "S": "DE"
+    },
+    "vendor_counterparty_id": {
+      "NULL": true
+    },
+    "GSI1SK": {
+      "S": "VERIFICATION#c0188e4f-3744-4d10-8ee0-06c7295322ed"
+    },
+    "SK": {
+      "S": "VERIFICATION#c0188e4f-3744-4d10-8ee0-06c7295322ed"
+    },
+    "details": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "47198602-2098-4174-85a6-13c4d8a06fda"
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "finalized_at": {
+      "NULL": true
+    },
+    "vendor_transfer_id": {
+      "NULL": true
+    },
+    "vendor_name": {
+      "S": "finapi"
+    },
+    "vendor_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "GSI4PK": {
+      "S": "SUCCESS"
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "vendor_account_id": {
+      "NULL": true
+    },
+    "service_type": {
+      "S": "VOP_CHECK"
+    },
+    "full_name": {
+      "S": "Felix Meyer"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#B318A5B6-7614-4E85-9962-86CE071A65C6"
+    },
+    "iban": {
+      "S": "DE87701500001002133054"
+    },
+    "correlation_id": {
+      "S": "B318A5B6-7614-4E85-9962-86CE071A65C6"
+    },
+    "result_code": {
+      "NULL": true
+    },
+    "PK": {
+      "S": "TRANSACTION#47198602-2098-4174-85a6-13c4d8a06fda"
+    },
+    "entity": {
+      "S": "Verification"
+    },
+    "status": {
+      "S": "SUCCESS"
+    }
+  },
+  {
+    "verification_service_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:39:38.850Z"
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "verification_id": {
+      "S": "cf4ecb74-e592-47d8-82b9-db6e3470574a"
+    },
+    "verification_error": {
+      "NULL": true
+    },
+    "GSI4SK": {
+      "S": "2026-06-11T13:39:38.850Z"
+    },
+    "updated_at": {
+      "S": "2026-06-11T13:39:38.850Z"
+    },
+    "verification_additional_details": {
+      "M": {
+        "verification_service_status": {
+          "S": "MATCH_RESULT_MATCH"
+        }
+      }
+    },
+    "iban_country": {
+      "S": "BE"
+    },
+    "vendor_counterparty_id": {
+      "NULL": true
+    },
+    "GSI1SK": {
+      "S": "VERIFICATION#cf4ecb74-e592-47d8-82b9-db6e3470574a"
+    },
+    "SK": {
+      "S": "VERIFICATION#cf4ecb74-e592-47d8-82b9-db6e3470574a"
+    },
+    "details": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "40e2b29a-5dba-48ab-b371-2259e13e4f7e"
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "finalized_at": {
+      "NULL": true
+    },
+    "vendor_transfer_id": {
+      "NULL": true
+    },
+    "vendor_name": {
+      "S": "finapi"
+    },
+    "vendor_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "GSI4PK": {
+      "S": "SUCCESS"
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "vendor_account_id": {
+      "NULL": true
+    },
+    "service_type": {
+      "S": "VOP_CHECK"
+    },
+    "full_name": {
+      "S": "Petro Koleshchuk"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#6AA66BF4-DDC8-4857-AE31-66EFA321CCC4"
+    },
+    "iban": {
+      "S": "BE05967500210875"
+    },
+    "correlation_id": {
+      "S": "6AA66BF4-DDC8-4857-AE31-66EFA321CCC4"
+    },
+    "result_code": {
+      "NULL": true
+    },
+    "PK": {
+      "S": "TRANSACTION#40e2b29a-5dba-48ab-b371-2259e13e4f7e"
+    },
+    "entity": {
+      "S": "Verification"
+    },
+    "status": {
+      "S": "SUCCESS"
+    }
+  },
+  {
+    "verification_service_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "created_at": {
+      "S": "2026-06-11T13:52:24.387Z"
+    },
+    "client_id": {
+      "S": "__CLIENT_ID__"
+    },
+    "verification_id": {
+      "S": "e5e83804-7558-4b23-b670-285b93733437"
+    },
+    "verification_error": {
+      "NULL": true
+    },
+    "GSI4SK": {
+      "S": "2026-06-11T13:52:24.387Z"
+    },
+    "updated_at": {
+      "S": "2026-06-11T13:52:24.387Z"
+    },
+    "verification_additional_details": {
+      "M": {
+        "verification_service_status": {
+          "S": "MATCH_RESULT_MATCH"
+        }
+      }
+    },
+    "iban_country": {
+      "S": "DE"
+    },
+    "vendor_counterparty_id": {
+      "NULL": true
+    },
+    "GSI1SK": {
+      "S": "VERIFICATION#e5e83804-7558-4b23-b670-285b93733437"
+    },
+    "SK": {
+      "S": "VERIFICATION#e5e83804-7558-4b23-b670-285b93733437"
+    },
+    "details": {
+      "NULL": true
+    },
+    "transaction_id": {
+      "S": "befa5107-d7ab-4017-a8b4-0ecfb3cf905a"
+    },
+    "error_message": {
+      "NULL": true
+    },
+    "finalized_at": {
+      "NULL": true
+    },
+    "vendor_transfer_id": {
+      "NULL": true
+    },
+    "vendor_name": {
+      "S": "finapi"
+    },
+    "vendor_status": {
+      "S": "MATCH_RESULT_MATCH"
+    },
+    "GSI4PK": {
+      "S": "SUCCESS"
+    },
+    "GSI3PK": {
+      "S": "CLIENT#__CLIENT_ID__"
+    },
+    "vendor_account_id": {
+      "NULL": true
+    },
+    "service_type": {
+      "S": "VOP_CHECK"
+    },
+    "full_name": {
+      "S": "Felix Meyer"
+    },
+    "GSI1PK": {
+      "S": "CORRELATION#769C016A-A80D-45AC-B250-E28E2B0E5B6E"
+    },
+    "iban": {
+      "S": "DE87701500001002133054"
+    },
+    "correlation_id": {
+      "S": "769C016A-A80D-45AC-B250-E28E2B0E5B6E"
+    },
+    "result_code": {
+      "NULL": true
+    },
+    "PK": {
+      "S": "TRANSACTION#befa5107-d7ab-4017-a8b4-0ecfb3cf905a"
+    },
+    "entity": {
+      "S": "Verification"
+    },
+    "status": {
+      "S": "SUCCESS"
+    }
+  }
+]

@@ -119,7 +119,10 @@ encrypt_api_key() {
 # Step 1: Get client ID by email
 print_section "Step 1: Getting Client Information"
 print_info "Looking up client ID for email: $CLIENT_EMAIL"
-CLIENT_ID=$(psql_exec "SELECT id FROM clients WHERE email = '$CLIENT_EMAIL';")
+# CPM refactor (Jun 2026): client login identity moved out of `clients` into the
+# `users` table. `clients.email` was dropped; the login email now lives on the
+# CLIENTS_ADMIN user, linked to its client via the `user_clients` join table.
+CLIENT_ID=$(psql_exec "SELECT uc.client_id FROM user_clients uc JOIN users u ON u.user_id = uc.user_id WHERE u.email = '$CLIENT_EMAIL' LIMIT 1;")
 
 if [ -z "$CLIENT_ID" ]; then
     print_error "Client with email $CLIENT_EMAIL not found!"
@@ -179,122 +182,145 @@ fi
 # Step 4: Create API keys
 print_section "Step 4: Creating API Keys"
 
-# GNU date uses -d, BSD/macOS date uses -v — try GNU first, fall back to BSD
-EXPIRES_AT=$(date -u -d "+1 year" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+1y +"%Y-%m-%d %H:%M:%S")
+# GNU date uses -d, BSD/macOS date uses -v — try GNU first, fall back to BSD.
+# CPM/DI refactor (Jun 2026): every (client, product, environment) now carries TWO
+# api_keys rows — a CLIENT_USAGE key (client-revealable, labelled, 1-year expiry)
+# and a CLIENT_SYSTEM key (platform-internal, never revealed to CLIENT_USERs, no
+# label, 10-year expiry to match be-admin SYSTEM_KEY_EXPIRY_YEARS). The api_keys
+# table gained `api_key_type` + `status`, and renamed expiresAt/createdAt to
+# snake_case. See be-admin ApiKeyType enum + api-key.service.ts.
+EXPIRES_AT_USAGE=$(date -u -d "+1 year" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+1y +"%Y-%m-%d %H:%M:%S")
+EXPIRES_AT_SYSTEM=$(date -u -d "+10 years" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+10y +"%Y-%m-%d %H:%M:%S")
 
-for API_KEY_DATA in "${API_KEYS[@]}"; do
-    IFS='|' read -r PRODUCT_TYPE API_KEY_VALUE LABEL <<< "$API_KEY_DATA"
-    
-    print_info "Processing API key for: $PRODUCT_TYPE"
-    
-    # Check if subscription exists for this product
-    SUBSCRIPTION_EXISTS=$(psql_exec "
-        SELECT id FROM client_subscriptions 
-        WHERE client_id = '$CLIENT_ID' 
-        AND product_type = '$PRODUCT_TYPE' 
-        AND is_active = true;
-    ")
-    
-    if [ -z "$SUBSCRIPTION_EXISTS" ]; then
-        print_warn "No active subscription found for $PRODUCT_TYPE. Skipping..."
-        continue
+# Provision one API Gateway key + encrypted DB row for a (product, key type).
+# Args: 1=product_type 2=api_key_value 3=label 4=api_key_type 5=expires_at 6=external_usage_plan_id
+create_api_key() {
+    ck_product="$1"; ck_value="$2"; ck_label="$3"; ck_type="$4"; ck_expires="$5"; ck_plan="$6"
+    ck_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+    # System keys carry no user-facing label (be-admin DI rules).
+    if [ "$ck_type" = "CLIENT_SYSTEM" ]; then
+        ck_label_sql="NULL"
+    else
+        ck_label_sql="'$ck_label'"
     fi
-    
-    # Get product plan for external_usage_plan_id
-    EXTERNAL_USAGE_PLAN_ID=$(psql_exec "
-        SELECT external_usage_plan_id FROM product_plans 
-        WHERE client_id = '$CLIENT_ID' 
-        AND product_type = '$PRODUCT_TYPE'
-        ORDER BY created_at DESC
-        LIMIT 1;
-    ")
-    
-    # Generate UUID for the API key record
-    API_KEY_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-    
-    # Create API key in AWS API Gateway with clientId tag
-    # The clientId tag is required by ApiGatewayApiKeyService to resolve the client
-    print_info "Creating API Gateway key for $PRODUCT_TYPE..."
-    AWS_KEY_RESPONSE=$(aws --endpoint-url="$AWS_ENDPOINT_URL" \
+
+    # Create API key in AWS API Gateway. The clientId tag is required by
+    # ApiGatewayApiKeyService to resolve the client; apiKeyType is restored onto
+    # the DynamoDB lookup record on re-seed (be-admin DI-FR-17).
+    print_info "Creating API Gateway key for $ck_product ($ck_type)..."
+    ck_aws_response=$(aws --endpoint-url="$AWS_ENDPOINT_URL" \
         apigateway create-api-key \
-        --name "client-${CLIENT_ID}-apiKey-${PRODUCT_TYPE}-local" \
+        --name "client-${CLIENT_ID}-apiKey-${ck_product}-${ck_type}-local" \
         --enabled \
-        --value "$API_KEY_VALUE" \
-        --tags "clientId=${CLIENT_ID}" \
+        --value "$ck_value" \
+        --tags "clientId=${CLIENT_ID},apiKeyType=${ck_type}" \
         --output json 2>/dev/null) || true
-    
-    if [ -z "$AWS_KEY_RESPONSE" ]; then
-        print_error "Failed to create API Gateway key for $PRODUCT_TYPE"
-        continue
+
+    if [ -z "$ck_aws_response" ]; then
+        print_error "Failed to create API Gateway key for $ck_product ($ck_type)"
+        return 1
     fi
-    
-    AWS_KEY_ID=$(echo "$AWS_KEY_RESPONSE" | node -e "
+
+    ck_aws_id=$(echo "$ck_aws_response" | node -e "
         const data = require('fs').readFileSync(0, 'utf8');
-        const json = JSON.parse(data);
-        console.log(json.id);
+        console.log(JSON.parse(data).id);
     ")
-    
-    if [ -z "$AWS_KEY_ID" ]; then
-        print_error "Failed to get API Gateway key ID for $PRODUCT_TYPE"
-        continue
+    if [ -z "$ck_aws_id" ]; then
+        print_error "Failed to get API Gateway key ID for $ck_product ($ck_type)"
+        return 1
     fi
-    
-    print_success "Created API Gateway key: $AWS_KEY_ID"
-    
-    # Attach to usage plan (if exists and not 'aczpi1gfrd' placeholder)
-    if [ -n "$EXTERNAL_USAGE_PLAN_ID" ] && [ "$EXTERNAL_USAGE_PLAN_ID" != "aczpi1gfrd" ]; then
-        print_info "Attaching to usage plan: $EXTERNAL_USAGE_PLAN_ID"
+    print_success "Created API Gateway key: $ck_aws_id"
+
+    # Attach to usage plan (if exists and not the 'aczpi1gfrd' placeholder)
+    if [ -n "$ck_plan" ] && [ "$ck_plan" != "aczpi1gfrd" ]; then
+        print_info "Attaching to usage plan: $ck_plan"
         aws --endpoint-url="$AWS_ENDPOINT_URL" \
             apigateway create-usage-plan-key \
-            --usage-plan-id "$EXTERNAL_USAGE_PLAN_ID" \
-            --key-id "$AWS_KEY_ID" \
+            --usage-plan-id "$ck_plan" \
+            --key-id "$ck_aws_id" \
             --key-type "API_KEY" \
             2>/dev/null || true
     fi
-    
-    # Encrypt the API key
-    print_info "Encrypting API key..."
-    ENCRYPTED_API_KEY=$(encrypt_api_key "$API_KEY_VALUE" "$ENCRYPTION_SECRET")
-    
-    if [ -z "$ENCRYPTED_API_KEY" ]; then
-        print_error "Failed to encrypt API key for $PRODUCT_TYPE"
-        continue
+
+    ck_encrypted=$(encrypt_api_key "$ck_value" "$ENCRYPTION_SECRET")
+    if [ -z "$ck_encrypted" ]; then
+        print_error "Failed to encrypt API key for $ck_product ($ck_type)"
+        return 1
     fi
-    
-    # Insert into database
-    print_info "Inserting API key into database..."
+
     psql_exec "
         INSERT INTO api_keys (
             id,
             environment,
             label,
             aws_key_id,
-            \"expiresAt\",
+            expires_at,
             client_id,
-            \"createdAt\",
+            created_at,
             scopes,
             encrypted_api_key,
-            product_type
+            product_type,
+            api_key_type,
+            status
         ) VALUES (
-            '$API_KEY_ID',
+            '$ck_id',
             'Sandbox',
-            '$LABEL',
-            '$AWS_KEY_ID',
-            '$EXPIRES_AT',
+            $ck_label_sql,
+            '$ck_aws_id',
+            '$ck_expires',
             '$CLIENT_ID',
             NOW(),
             ARRAY['debit_guard', 'ownership_check', 'a2a']::text[],
-            '$ENCRYPTED_API_KEY',
-            '$PRODUCT_TYPE'
+            '$ck_encrypted',
+            '$ck_product',
+            '$ck_type',
+            'Active'
         );
     " > /dev/null
-    
-    print_success "Created API key for $PRODUCT_TYPE"
-    echo "   API Key ID: $API_KEY_ID"
-    echo "   AWS Key ID: $AWS_KEY_ID"
+
+    print_success "Created $ck_type API key for $ck_product"
+    echo "   API Key ID: $ck_id"
+    echo "   AWS Key ID: $ck_aws_id"
+    echo "   Expires At: $ck_expires"
+}
+
+for API_KEY_DATA in "${API_KEYS[@]}"; do
+    IFS='|' read -r PRODUCT_TYPE API_KEY_VALUE LABEL <<< "$API_KEY_DATA"
+
+    print_info "Processing API keys for: $PRODUCT_TYPE"
+
+    # Check if subscription exists for this product
+    SUBSCRIPTION_EXISTS=$(psql_exec "
+        SELECT id FROM client_subscriptions
+        WHERE client_id = '$CLIENT_ID'
+        AND product_type = '$PRODUCT_TYPE'
+        AND is_active = true;
+    ")
+
+    if [ -z "$SUBSCRIPTION_EXISTS" ]; then
+        print_warn "No active subscription found for $PRODUCT_TYPE. Skipping..."
+        continue
+    fi
+
+    # Get product plan for external_usage_plan_id
+    EXTERNAL_USAGE_PLAN_ID=$(psql_exec "
+        SELECT external_usage_plan_id FROM product_plans
+        WHERE client_id = '$CLIENT_ID'
+        AND product_type = '$PRODUCT_TYPE'
+        ORDER BY created_at DESC
+        LIMIT 1;
+    ")
+
+    # CLIENT_USAGE key — the deterministic local key value clients use directly.
+    create_api_key "$PRODUCT_TYPE" "$API_KEY_VALUE" "$LABEL" "CLIENT_USAGE" "$EXPIRES_AT_USAGE" "$EXTERNAL_USAGE_PLAN_ID" || continue
     echo "   Label: $LABEL"
-    echo "   Expires At: $EXPIRES_AT"
     echo "   API Key Value: $API_KEY_VALUE"
+
+    # CLIENT_SYSTEM key — platform-internal, distinct deterministic value so local
+    # runs are reproducible and the value never collides with the usage key.
+    SYSTEM_KEY_VALUE="ak_sys_sand_$(printf 'system-%s-%s' "$CLIENT_ID" "$PRODUCT_TYPE" | openssl dgst -sha256 | awk '{print $NF}')"
+    create_api_key "$PRODUCT_TYPE" "$SYSTEM_KEY_VALUE" "" "CLIENT_SYSTEM" "$EXPIRES_AT_SYSTEM" "$EXTERNAL_USAGE_PLAN_ID" || true
 done
 
 # Verification: Display final state
@@ -302,17 +328,19 @@ print_section "Verification: Final State"
 
 echo "API Keys:"
 psql_query "
-    SELECT 
+    SELECT
         id,
         product_type,
+        api_key_type,
+        status,
         environment,
         label,
         aws_key_id,
-        \"expiresAt\" as expires_at,
-        \"createdAt\" as created_at
-    FROM api_keys 
+        expires_at,
+        created_at
+    FROM api_keys
     WHERE client_id = '$CLIENT_ID'
-    ORDER BY product_type;
+    ORDER BY product_type, api_key_type;
 "
 
 echo ""
