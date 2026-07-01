@@ -112,6 +112,11 @@ services:
     volumes:
       - ../../calytics-fe:/app
       - /app/node_modules
+      # Isolate the container's Nuxt build dir from the host bind mount. Without this, a host-side
+      # `nuxt dev`/`nuxt prepare` in calytics-fe writes host-absolute paths into .nuxt, which the
+      # container then can't resolve (500: "Cannot find module .../node_modules/@nuxt/vite-builder...").
+      - /app/.nuxt
+      - /app/.output
     profiles: ["app"]
     networks:
       - calytics-net
