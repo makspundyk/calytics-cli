@@ -91,12 +91,20 @@ services:
       context: ../../calytics-fe
       target: development
     container_name: calytics_fe
-    command: npm run dev -- --host 0.0.0.0
+    # Pin host+port for the containerized run (CLI flags override nuxt.config
+    # devServer, whose default dev port may differ for host-only workflows).
+    command: npm run dev -- --host 0.0.0.0 --port 5000
     environment:
       # Browser calls need the host IP, not localhost (WSL/Docker networking)
       # Set FE_API_BASE and FE_API_URL in .env (project root) to override
       NUXT_PUBLIC_API_BASE: ${FE_API_BASE:-http://localhost:9000}
       NUXT_PUBLIC_API_URL: ${FE_API_URL:-http://localhost:9000/api}
+      # SEC-001 — the FE now proxies auth+data through its Nitro BFF, so the SERVER (this container)
+      # must reach be-admin over the compose network (localhost:9000 is the fe container itself).
+      # The browser still uses NUXT_PUBLIC_API_URL above.
+      NUXT_API_URL: ${FE_SERVER_API_URL:-http://host.docker.internal:9000/api}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5000:5000"
     depends_on:
