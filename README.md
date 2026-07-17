@@ -107,6 +107,15 @@ cal seed cross-product-tables # Create cross-product DDB tables (worker-tasks, r
 cal seed dg-data              # DebitGuard transactions + verifications (FE Secure Direct Debits page)
 ```
 
+### Callbacks
+
+```bash
+cal callbacks drain           # Deliver queued client webhooks: drain the client-callback
+                              # SQS queue through the be-admin ingress consumer (SQS -> handler
+                              # -> webhook delivery). Locally be-admin has no SQS event source,
+                              # so run this after emitting webhooks to deliver them.
+```
+
 ### Migrate
 
 ```bash

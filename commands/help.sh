@@ -65,6 +65,10 @@ cat << 'EOF'
     cal seed cross-product-tables Cross-product DDB tables (worker-tasks, returns-log)
     cal seed dg-data              DebitGuard transactions + verifications (FE Secure Direct Debits)
 
+  CALLBACKS
+    cal callbacks drain           Deliver queued client webhooks (drain the client-callback
+                                  SQS queue through the be-admin ingress consumer)
+
   MIGRATE
     cal migrate run               Run next pending PostgreSQL migration
     cal migrate run --all         Run all pending migrations

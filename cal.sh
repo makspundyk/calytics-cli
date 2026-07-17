@@ -91,6 +91,9 @@ _cal_completions() {
       seed)
         COMPREPLY=($(compgen -W "all secrets queues client admins webhooks plans api-keys ses a2a-tables a2a-payments cross-product-tables dg-data" -- "$cur"))
         ;;
+      callbacks)
+        COMPREPLY=($(compgen -W "drain" -- "$cur"))
+        ;;
       build)
         COMPREPLY=($(compgen -W "shared shims be admin a2a cp docs" -- "$cur"))
         ;;
