@@ -67,9 +67,15 @@ services:
       POSTGRES_PASSWORD: register
       POSTGRES_NAME: calytics-admin
       AWS_ENDPOINT: http://localstack:4566
+      AWS_ENDPOINT_URL: http://localstack:4566
       # Risk Scoring local API runs on the host (cal rs api → :4002)
       RISK_SCORING_API_BASE_URL: ${RISK_SCORING_API_BASE_URL:-http://host.docker.internal:4002}
       RISK_SCORING_API_TIMEOUT_MS: ${RISK_SCORING_API_TIMEOUT_MS:-5000}
+      # Debt Collection (National Inkasso) — required at boot by DebtCollectionModule; the
+      # be-admin dynamo migrations runner self-creates the table in LocalStack. Vendor SOAP
+      # calls disabled locally (MT reconciliation E2E does not exercise the DC path).
+      DEBT_COLLECTION_TABLE_NAME: ${DEBT_COLLECTION_TABLE_NAME:-calytics-be-admin-local-debt-collection-cases}
+      DEBT_COLLECTION_NATIONAL_INKASSO_ENABLED: ${DEBT_COLLECTION_NATIONAL_INKASSO_ENABLED:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

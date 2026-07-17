@@ -35,3 +35,7 @@ export SHARED_MODULES_DIR="${SHARED_MODULES_DIR:-$CAL_PROJECT/calytics-shared-mo
 # else but eliminates the stall for `npm run offline:local`.
 export NODE_OPTIONS="${NODE_OPTIONS:---dns-result-order=ipv4first}"
 export AIS_CONNECTION_REFRESH_STATE_TABLE_NAME="${AIS_CONNECTION_REFRESH_STATE_TABLE_NAME:-calytics-a2a-local-ais-connection-refresh-state}"
+# be-admin Debt Collection (National Inkasso) — required at boot by DebtCollectionModule.
+# The be-admin dynamo migrations runner self-creates the table in LocalStack; vendor SOAP disabled locally.
+export DEBT_COLLECTION_TABLE_NAME="${DEBT_COLLECTION_TABLE_NAME:-calytics-be-admin-local-debt-collection-cases}"
+export DEBT_COLLECTION_NATIONAL_INKASSO_ENABLED="${DEBT_COLLECTION_NATIONAL_INKASSO_ENABLED:-false}"
