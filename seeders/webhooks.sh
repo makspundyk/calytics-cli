@@ -211,6 +211,11 @@ WEBHOOK_1_EVENTS=(
   "calytics_collect.session.failed"
   "calytics_collect.mandate.created"
   "calytics_collect.mandate.deactivated"
+  # Manual Transfer Reconciliation terminal webhooks (emitted by calytics-a2a). Subscribing the A2A webhook
+  # here means a locally seeded client receives them at the webhook-tester (session f5e27a02) with no manual
+  # setup. The DG/OC webhooks (2/3) deliberately do NOT subscribe these -> negative-delivery coverage.
+  "payment_reconciliation.transaction.reconciled"
+  "payment_reconciliation.transaction.unmatched"
 )
 
 print_info "Creating webhook 1: $WEBHOOK_1_LABEL"
