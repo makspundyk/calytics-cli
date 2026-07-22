@@ -148,7 +148,7 @@ TABLE_A2A_PAYMENTS="calytics-a2a-${STAGE}-payments"
 TABLE_A2A_IDEMPOTENCY="calytics-a2a-${STAGE}-payments-idempotency"
 TABLE_A2A_PAYMENT_TRANSACTIONS="calytics-a2a-payment-transactions"
 
-# Calytics Collect tables
+# Smart Debit tables
 TABLE_SMART_DEBIT_SESSIONS="calytics-smart-debit-${STAGE}-sessions"
 TABLE_SMART_DEBIT_MANDATES="calytics-smart-debit-${STAGE}-mandates"
 TABLE_SMART_DEBIT_AUDIT="calytics-smart-debit-${STAGE}-audit-events"

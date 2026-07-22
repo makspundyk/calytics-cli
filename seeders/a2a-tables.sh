@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # =============================================================================
-# A2A + Calytics Collect – Create DynamoDB tables (LocalStack)
+# A2A + Smart Debit – Create DynamoDB tables (LocalStack)
 # =============================================================================
 # Creates DynamoDB tables in LocalStack:
 #   - A2A: payments, idempotency, transaction-codes
 #     - PAYMENTS_TABLE_NAME=calytics-a2a-local-payments
 #     - TRANSACTION_CODE_TABLE_NAME=calytics-a2a-local-transaction-codes
-#   - Calytics Collect: sessions, mandates, audit, webhook-events
+#   - Smart Debit: sessions, mandates, audit, webhook-events
 # Idempotent: skips creation if a table already exists.
 #
 # Usage:
@@ -185,14 +185,14 @@ aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-ti
   --table-name "$MATCH_CONFLICTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
 # -----------------------------------------------------------------------------
-# Calytics Collect tables (stage "local" -> calytics-smart-debit-local-*)
+# Smart Debit tables (stage "local" -> calytics-smart-debit-local-*)
 # -----------------------------------------------------------------------------
 SMART_DEBIT_SESSIONS_TABLE="${SMART_DEBIT_SESSIONS_TABLE:-calytics-smart-debit-local-sessions}"
 SMART_DEBIT_MANDATES_TABLE="${SMART_DEBIT_MANDATES_TABLE:-calytics-smart-debit-local-mandates}"
 SMART_DEBIT_AUDIT_TABLE="${SMART_DEBIT_AUDIT_TABLE:-calytics-smart-debit-local-audit-events}"
 SMART_DEBIT_WEBHOOK_EVENTS_TABLE="${SMART_DEBIT_WEBHOOK_EVENTS_TABLE:-calytics-smart-debit-local-webhook-events}"
 
-print_info "Ensuring DynamoDB tables exist for Calytics Collect..."
+print_info "Ensuring DynamoDB tables exist for Smart Debit..."
 
 # Sessions (GSI1, GSI2, GSI3; TTL on ttl)
 ensure_table "$SMART_DEBIT_SESSIONS_TABLE" "
@@ -264,4 +264,4 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
 aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-time-to-live \
   --table-name "$SMART_DEBIT_WEBHOOK_EVENTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
-print_success "A2A and Calytics Collect DynamoDB tables ready."
+print_success "A2A and Smart Debit DynamoDB tables ready."

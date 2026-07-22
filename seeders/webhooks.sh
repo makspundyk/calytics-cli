@@ -207,10 +207,10 @@ WEBHOOK_1_PLAIN_SIGNING_SECRET="6b2935e5f69390f9064f3f975a2a21ddd3a823b0a213a03a
 # Events: A2APaymentFinalized, SmartDebit SessionAccountsReady/SessionFailed, MandateCreated/MandateDeactivated (backend dotted format)
 WEBHOOK_1_EVENTS=(
   "a2a.payment.finalized"
-  "calytics_collect.session.accounts_ready"
-  "calytics_collect.session.failed"
-  "calytics_collect.mandate.created"
-  "calytics_collect.mandate.deactivated"
+  "smart_debit.session.accounts_ready"
+  "smart_debit.session.failed"
+  "smart_debit.mandate.created"
+  "smart_debit.mandate.deactivated"
   # Manual Transfer Reconciliation terminal webhooks (emitted by calytics-a2a). Subscribing the A2A webhook
   # here means a locally seeded client receives them at the webhook-tester (session f5e27a02) with no manual
   # setup. The DG/OC webhooks (2/3) deliberately do NOT subscribe these -> negative-delivery coverage.
