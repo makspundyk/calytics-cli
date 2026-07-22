@@ -27,6 +27,14 @@ const state = {
     faults: {}, // userId -> statusCode for DELETE; oauthPassword -> {status, remaining} for password grants
     payments: new Map(), // id(number) -> {id, statusV2, status, bankMessage?}
     webforms: new Map(), // id -> {id, status, payload}
+    // AIS backgroundUpdate refresh tasks (reconciliation "refreshing" in-flight window, MT E2E H2).
+    // taskId -> {id, bankConnectionId, status, finalisedCallbackUrl, webFormRequiredCallbackUrl,
+    //            errorCode?, errorMessage?, createdAt}
+    tasks: new Map(),
+    // Controllable refresh-task lifecycle: autoCompleteMs=null keeps a launched task IN_PROGRESS until an
+    // explicit POST /__tasks/complete (deterministic, observable in-flight window). Set a number (ms) via
+    // /__seed {taskAutoCompleteMs} to auto-complete + fire the callback after that delay instead.
+    taskConfig: { autoCompleteMs: null },
 };
 
 // client_id -> mandator label, mirrors the local secret seeded by the QA run
@@ -68,6 +76,48 @@ function principal(req) {
     return state.tokens.get(token);
 }
 
+// Outbound JSON POST — used to deliver the finAPI backgroundUpdate "finalised" callback back to a2a
+// (POST /system-webhook/v1/reconciliation/refresh-complete/{token}). Faithful to how real finAPI pushes
+// task completion; a2a always replies 200 (it ignores the body on error).
+function postJson(urlString, bodyObj) {
+    return new Promise((resolve, reject) => {
+        let u;
+        try { u = new URL(urlString); } catch (e) { return reject(e); }
+        const data = JSON.stringify(bodyObj);
+        const opts = {
+            method: 'POST',
+            hostname: u.hostname,
+            port: u.port || 80,
+            path: u.pathname + u.search,
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+        };
+        const r = http.request(opts, (resp) => {
+            let d = '';
+            resp.on('data', (c) => (d += c));
+            resp.on('end', () => resolve({ status: resp.statusCode, body: d }));
+        });
+        r.on('error', reject);
+        r.write(data);
+        r.end();
+    });
+}
+
+// Transition a refresh task to a terminal status and (optionally) push the finalised callback to a2a.
+async function completeTask(taskId, status, fireCallback, errorCode, errorMessage) {
+    const task = state.tasks.get(taskId);
+    if (!task) return { fired: false, reason: 'unknown_task' };
+    task.status = status;
+    if (errorCode !== undefined) task.errorCode = errorCode;
+    if (errorMessage !== undefined) task.errorMessage = errorMessage;
+    if (!fireCallback || !task.finalisedCallbackUrl) return { fired: false };
+    try {
+        const r = await postJson(task.finalisedCallbackUrl, { taskId: task.id, status });
+        return { fired: true, callbackUrl: task.finalisedCallbackUrl, callbackStatus: r.status };
+    } catch (e) {
+        return { fired: false, error: String(e && e.message ? e.message : e) };
+    }
+}
+
 const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     const body = await readBody(req);
@@ -86,6 +136,8 @@ const server = http.createServer(async (req, res) => {
             users: [...state.users.values()],
             audit: state.audit,
             faults: state.faults,
+            tasks: [...state.tasks.values()],
+            taskConfig: state.taskConfig,
         });
     }
     if (url.pathname === '/__reset') {
@@ -95,10 +147,22 @@ const server = http.createServer(async (req, res) => {
         state.faults = {};
         state.payments.clear();
         state.webforms.clear();
+        state.tasks.clear();
+        state.taskConfig = { autoCompleteMs: null };
         return json(res, 200, { ok: true });
     }
+    // Force a refresh task terminal + push its finalised callback to a2a (deterministic completion for
+    // the observable in-flight window). Body: {taskId, status?='COMPLETED', fireCallback?=true, errorCode?, errorMessage?}.
+    if (url.pathname === '/__tasks/complete' && req.method === 'POST') {
+        const { taskId, status = 'COMPLETED', fireCallback = true, errorCode, errorMessage } = JSON.parse(body || '{}');
+        if (!state.tasks.has(taskId)) return json(res, 404, { ok: false, error: 'unknown task', taskId });
+        const delivery = await completeTask(taskId, status, fireCallback, errorCode, errorMessage);
+        return json(res, 200, { ok: true, taskId, status, delivery });
+    }
     if (url.pathname === '/__seed' && req.method === 'POST') {
-        const { users = [], payments = [], webforms = [] } = JSON.parse(body || '{}');
+        const parsedSeed = JSON.parse(body || '{}');
+        const { users = [], payments = [], webforms = [] } = parsedSeed;
+        if (parsedSeed.taskAutoCompleteMs !== undefined) state.taskConfig.autoCompleteMs = parsedSeed.taskAutoCompleteMs;
         for (const p of payments) {
             state.payments.set(Number(p.id), { id: Number(p.id), statusV2: p.statusV2 ?? 'PENDING', status: p.status ?? p.statusV2 ?? 'PENDING', bankMessage: p.bankMessage });
         }
@@ -202,6 +266,54 @@ const server = http.createServer(async (req, res) => {
         const ids = rawIds.replace(/[\[\]]/g, '').split(',').filter(Boolean).map(Number);
         const payments = ids.map((id) => state.payments.get(id)).filter(Boolean);
         return json(res, 200, { payments });
+    }
+
+    // ── AIS backgroundUpdate refresh tasks (reconciliation "refreshing" in-flight, MT E2E H2) ───────
+    // Launch a bank-connection backgroundUpdate. Web Form 2.0 API: POST /api/tasks/backgroundUpdate,
+    // body {bankConnectionId, callbacks:{finalised, webFormRequired}} → returns the created task {id}.
+    // Fault injection via /__faults {backgroundUpdate:{status,code?,message?,remaining?}}: 423 = refresh
+    // already in flight (a2a attaches), 429 = vendor budget exhausted (a2a records throttle → deferred).
+    if (url.pathname === '/api/tasks/backgroundUpdate' && req.method === 'POST') {
+        if (!who || who.kind !== 'user') {
+            return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'invalid token' }] });
+        }
+        const bgFault = state.faults.backgroundUpdate;
+        if (bgFault && (bgFault.remaining === undefined || bgFault.remaining > 0)) {
+            if (bgFault.remaining !== undefined) bgFault.remaining--;
+            const code = bgFault.status ?? 429;
+            return json(res, code, { errors: [{ code: bgFault.code ?? (code === 423 ? 'LOCKED' : 'TOO_MANY_REQUESTS'), message: bgFault.message ?? `injected ${code}` }] });
+        }
+        const payload = parseForm(body, 'json');
+        const id = `task-${require('crypto').randomUUID()}`;
+        const task = {
+            id,
+            status: 'IN_PROGRESS',
+            bankConnectionId: payload.bankConnectionId,
+            finalisedCallbackUrl: payload.callbacks?.finalised,
+            webFormRequiredCallbackUrl: payload.callbacks?.webFormRequired,
+            createdAt: Date.now(),
+        };
+        state.tasks.set(id, task);
+        const autoMs = state.taskConfig.autoCompleteMs;
+        if (autoMs != null) setTimeout(() => { completeTask(id, 'COMPLETED', true).catch(() => {}); }, autoMs);
+        return json(res, 201, { id, type: 'BACKGROUND_UPDATE', status: 'IN_PROGRESS' });
+    }
+    // Poll a task (getTask backstop + lost-callback sweep). GET /api/tasks/{taskId} → {id, type, status, payload?}.
+    if (url.pathname.startsWith('/api/tasks/') && req.method === 'GET') {
+        if (!who || who.kind !== 'user') {
+            return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'invalid token' }] });
+        }
+        const taskId = decodeURIComponent(url.pathname.split('/').pop());
+        const task = state.tasks.get(taskId);
+        if (!task) return json(res, 404, { errors: [{ code: 'NOT_FOUND', message: taskId }] });
+        return json(res, 200, {
+            id: task.id,
+            type: 'BACKGROUND_UPDATE',
+            status: task.status,
+            ...(task.errorCode !== undefined || task.errorMessage !== undefined
+                ? { payload: { errorCode: task.errorCode, errorMessage: task.errorMessage } }
+                : {}),
+        });
     }
 
     // ── bank connections (consent truth surface) ──────────────────────────
