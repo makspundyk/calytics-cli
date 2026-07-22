@@ -185,19 +185,19 @@ aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-ti
   --table-name "$MATCH_CONFLICTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
 # -----------------------------------------------------------------------------
-# Calytics Collect tables (stage "local" -> calytics-cc-local-*)
+# Calytics Collect tables (stage "local" -> calytics-smart-debit-local-*)
 # -----------------------------------------------------------------------------
-CC_SESSIONS_TABLE="${CC_SESSIONS_TABLE:-calytics-cc-local-sessions}"
-CC_MANDATES_TABLE="${CC_MANDATES_TABLE:-calytics-cc-local-mandates}"
-CC_AUDIT_TABLE="${CC_AUDIT_TABLE:-calytics-cc-local-audit-events}"
-CC_WEBHOOK_EVENTS_TABLE="${CC_WEBHOOK_EVENTS_TABLE:-calytics-cc-local-webhook-events}"
+SMART_DEBIT_SESSIONS_TABLE="${SMART_DEBIT_SESSIONS_TABLE:-calytics-smart-debit-local-sessions}"
+SMART_DEBIT_MANDATES_TABLE="${SMART_DEBIT_MANDATES_TABLE:-calytics-smart-debit-local-mandates}"
+SMART_DEBIT_AUDIT_TABLE="${SMART_DEBIT_AUDIT_TABLE:-calytics-smart-debit-local-audit-events}"
+SMART_DEBIT_WEBHOOK_EVENTS_TABLE="${SMART_DEBIT_WEBHOOK_EVENTS_TABLE:-calytics-smart-debit-local-webhook-events}"
 
 print_info "Ensuring DynamoDB tables exist for Calytics Collect..."
 
 # Sessions (GSI1, GSI2, GSI3; TTL on ttl)
-ensure_table "$CC_SESSIONS_TABLE" "
+ensure_table "$SMART_DEBIT_SESSIONS_TABLE" "
 aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
-  --table-name $CC_SESSIONS_TABLE \
+  --table-name $SMART_DEBIT_SESSIONS_TABLE \
   --billing-mode PAY_PER_REQUEST \
   --attribute-definitions \
     AttributeName=session_id,AttributeType=S \
@@ -213,12 +213,12 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
   ]'
 "
 aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-time-to-live \
-  --table-name "$CC_SESSIONS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
+  --table-name "$SMART_DEBIT_SESSIONS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
 # Mandates (GSI1–GSI4)
-ensure_table "$CC_MANDATES_TABLE" "
+ensure_table "$SMART_DEBIT_MANDATES_TABLE" "
 aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
-  --table-name $CC_MANDATES_TABLE \
+  --table-name $SMART_DEBIT_MANDATES_TABLE \
   --billing-mode PAY_PER_REQUEST \
   --attribute-definitions \
     AttributeName=mandate_id,AttributeType=S \
@@ -237,9 +237,9 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
 "
 
 # Audit (GSI1-EntityAudit; TTL on ttl)
-ensure_table "$CC_AUDIT_TABLE" "
+ensure_table "$SMART_DEBIT_AUDIT_TABLE" "
 aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
-  --table-name $CC_AUDIT_TABLE \
+  --table-name $SMART_DEBIT_AUDIT_TABLE \
   --billing-mode PAY_PER_REQUEST \
   --attribute-definitions \
     AttributeName=event_id,AttributeType=S \
@@ -251,17 +251,17 @@ aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table 
   ]'
 "
 aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-time-to-live \
-  --table-name "$CC_AUDIT_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
+  --table-name "$SMART_DEBIT_AUDIT_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
 # Webhook events (TTL on ttl)
-ensure_table "$CC_WEBHOOK_EVENTS_TABLE" "
+ensure_table "$SMART_DEBIT_WEBHOOK_EVENTS_TABLE" "
 aws --endpoint-url $AWS_ENDPOINT_URL --region $AWS_REGION dynamodb create-table \
-  --table-name $CC_WEBHOOK_EVENTS_TABLE \
+  --table-name $SMART_DEBIT_WEBHOOK_EVENTS_TABLE \
   --billing-mode PAY_PER_REQUEST \
   --attribute-definitions AttributeName=webhook_id,AttributeType=S \
   --key-schema AttributeName=webhook_id,KeyType=HASH
 "
 aws --endpoint-url "$AWS_ENDPOINT_URL" --region "$AWS_REGION" dynamodb update-time-to-live \
-  --table-name "$CC_WEBHOOK_EVENTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
+  --table-name "$SMART_DEBIT_WEBHOOK_EVENTS_TABLE" --time-to-live-specification "Enabled=true,AttributeName=ttl" 2>/dev/null || true
 
 print_success "A2A and Calytics Collect DynamoDB tables ready."

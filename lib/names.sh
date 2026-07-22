@@ -149,11 +149,11 @@ TABLE_A2A_IDEMPOTENCY="calytics-a2a-${STAGE}-payments-idempotency"
 TABLE_A2A_PAYMENT_TRANSACTIONS="calytics-a2a-payment-transactions"
 
 # Calytics Collect tables
-TABLE_CC_SESSIONS="calytics-cc-${STAGE}-sessions"
-TABLE_CC_MANDATES="calytics-cc-${STAGE}-mandates"
-TABLE_CC_AUDIT="calytics-cc-${STAGE}-audit-events"
-TABLE_CC_WEBHOOK_EVENTS="calytics-cc-${STAGE}-webhook-events"
-TABLE_CC_MANDATE_TRANSACTIONS="calytics-cc-${STAGE}-mandate-transactions"
+TABLE_SMART_DEBIT_SESSIONS="calytics-smart-debit-${STAGE}-sessions"
+TABLE_SMART_DEBIT_MANDATES="calytics-smart-debit-${STAGE}-mandates"
+TABLE_SMART_DEBIT_AUDIT="calytics-smart-debit-${STAGE}-audit-events"
+TABLE_SMART_DEBIT_WEBHOOK_EVENTS="calytics-smart-debit-${STAGE}-webhook-events"
+TABLE_SMART_DEBIT_MANDATE_TRANSACTIONS="calytics-smart-debit-${STAGE}-mandate-transactions"
 
 # Risk Scoring tables
 TABLE_RS_IBAN_REPUTATION="calytics-risk-scoring-${STAGE}-iban-reputation"
@@ -225,13 +225,13 @@ export WEBHOOK_UI_A2A="${WEBHOOK_BASE_URL}/s/${WEBHOOK_SESSION_A2A}"
 
 # ── S3 bucket names ──────────────────────────────────────────────
 S3_ADMIN_BUCKET="calytics-be-${STAGE}-admin"
-S3_MANDATE_PDF="calytics-cc-${STAGE}-pdf"
+S3_MANDATE_PDF="calytics-smart-debit-${STAGE}-pdf"
 
 # ── API keys (local dev) ─────────────────────────────────────────
 APIKEY_DEBIT_GUARD="ak_sand_21c0f785e49e88d7c7d5b6a8f19a2402bbb190e2198a6158a7aa30331aa0e2b2"
 APIKEY_OWNERSHIP_CHECK="ak_sand_ff764a4e74ce9c8830c705c73ba57f911bbf4d81b3d63be427dc1641ae3bcb3a"
 APIKEY_A2A="ak_sand_b0694c75fd1c374d264ae48cfb68469cff5d484257b785e0093f04f60ff7b51f"
-APIKEY_CALYTICS_COLLECT="ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9"
+APIKEY_SMART_DEBIT="ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9"
 APIKEY_SMART_SWITCH="ak_sand_bc35765b987aa342931123986cdf6d2e4eeeffd7d029ef19ca27a1b906f33d06"
 
 # ── Credentials (display only) ───────────────────────────────────

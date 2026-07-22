@@ -6,7 +6,7 @@
 # - iban_hash = SHA-256 hex of iban (uppercase), must stay in sync with iban (GSI3).
 set -euo pipefail
 
-TABLE_NAME="${1:-calytics-cc-development-mandates}"
+TABLE_NAME="${1:-calytics-smart-debit-development-mandates}"
 REGION="${AWS_REGION:-eu-central-1}"
 
 PATTERNS=(stable irregular undetected)

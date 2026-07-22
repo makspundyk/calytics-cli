@@ -13,5 +13,5 @@
 
 resource "aws_s3_bucket" "mandate_pdf" {
   count  = var.enable_a2a ? 1 : 0
-  bucket = "calytics-cc-${var.env}-pdf"
+  bucket = "calytics-smart-debit-${var.env}-pdf"
 }

@@ -28,7 +28,7 @@ API_KEYS=(
     "DebitGuard|ak_sand_21c0f785e49e88d7c7d5b6a8f19a2402bbb190e2198a6158a7aa30331aa0e2b2|Local - DebitGuard"
     "OwnershipCheck|ak_sand_ff764a4e74ce9c8830c705c73ba57f911bbf4d81b3d63be427dc1641ae3bcb3a|Local - OwnershipCheck"
     "A2A|ak_sand_b0694c75fd1c374d264ae48cfb68469cff5d484257b785e0093f04f60ff7b51f|Local - A2A"
-    "CalyticsCollect|ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9|Local - CalyticsCollect"
+    "SmartDebit|ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9|Local - SmartDebit"
     "SmartSwitch|ak_sand_bc35765b987aa342931123986cdf6d2e4eeeffd7d029ef19ca27a1b906f33d06|Local - SmartSwitch"
 )
 
@@ -356,5 +356,5 @@ echo "API Keys created:"
 echo "  - DebitGuard:      ak_sand_21c0f785e49e88d7c7d5b6a8f19a2402bbb190e2198a6158a7aa30331aa0e2b2"
 echo "  - OwnershipCheck:  ak_sand_ff764a4e74ce9c8830c705c73ba57f911bbf4d81b3d63be427dc1641ae3bcb3a"
 echo "  - A2A:             ak_sand_b0694c75fd1c374d264ae48cfb68469cff5d484257b785e0093f04f60ff7b51f"
-echo "  - CalyticsCollect: ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9"
+echo "  - SmartDebit: ak_sand_917986e01ffd95becf1cbf47cd28c04e02bbf48fbe1caa903389044c3a6d58c9"
 echo "  - SmartSwitch:     ak_sand_bc35765b987aa342931123986cdf6d2e4eeeffd7d029ef19ca27a1b906f33d06"

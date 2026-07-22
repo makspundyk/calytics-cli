@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Delete mock mandates (those with UUID-style mandate_id; keep ULID 019... originals).
- * Usage: TABLE_NAME=calytics-cc-development-mandates REGION=eu-central-1 node delete-mock-mandates.js
+ * Usage: TABLE_NAME=calytics-smart-debit-development-mandates REGION=eu-central-1 node delete-mock-mandates.js
  */
 
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const TABLE_NAME = process.env.TABLE_NAME || 'calytics-cc-development-mandates';
+const TABLE_NAME = process.env.TABLE_NAME || 'calytics-smart-debit-development-mandates';
 const REGION = process.env.AWS_REGION || process.env.REGION || 'eu-central-1';
 
 // Get all mandate_ids via scan (paginate)

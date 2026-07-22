@@ -196,7 +196,7 @@ WH_CALLBACK_A2A="$WEBHOOK_INTERNAL_API/$WH_A2A_UUID"
 # Step 5 & 6: Create webhooks and secrets
 print_info "Step 5 & 6: Creating webhooks and secrets"
 
-# Webhook 1: Local - A2A & CC (A2A + CalyticsCollect events)
+# Webhook 1: Local - A2A & CC (A2A + SmartDebit events)
 WEBHOOK_1_ID="5e11e707-a3f1-4799-a356-27727fb5aade"
 WEBHOOK_1_LABEL="Local - A2A & CC"
 WEBHOOK_1_CALLBACK_URL="$WH_CALLBACK_A2A"
@@ -204,13 +204,13 @@ WEBHOOK_1_CALLBACK_URL="$WH_CALLBACK_A2A"
 # AND encrypted with the webhook master key for the PostgreSQL row, so the
 # consumer's HMAC and the support-revealable secret stay in sync.
 WEBHOOK_1_PLAIN_SIGNING_SECRET="6b2935e5f69390f9064f3f975a2a21ddd3a823b0a213a03a25d909812acc405b"
-# Events: A2APaymentFinalized, CalyticsCollect SessionAccountsReady/SessionFailed, MandateCreated/MandateDeactivated (backend dotted format)
+# Events: A2APaymentFinalized, SmartDebit SessionAccountsReady/SessionFailed, MandateCreated/MandateDeactivated (backend dotted format)
 WEBHOOK_1_EVENTS=(
   "a2a.payment.finalized"
-  "calytics_collect.session.accounts_ready"
-  "calytics_collect.session.failed"
-  "calytics_collect.mandate.created"
-  "calytics_collect.mandate.deactivated"
+  "smart_debit.session.accounts_ready"
+  "smart_debit.session.failed"
+  "smart_debit.mandate.created"
+  "smart_debit.mandate.deactivated"
 )
 
 print_info "Creating webhook 1: $WEBHOOK_1_LABEL"

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Create mock mandate records in calytics-cc-development-mandates.
+ * Create mock mandate records in calytics-smart-debit-development-mandates.
  * - 5-10 mandates per day of month (1-31), randomly
  * - Income pattern: 50% stable, 30% irregular, 20% undetected
  * - Status: 85% active, 15% inactive
  * - All UI fields filled: reference, iban, account_holder_name, status, signing_method,
  *   amount, debit_day, suggested_debit_day, income_pattern
  *
- * Usage: TABLE_NAME=calytics-cc-development-mandates REGION=eu-central-1 node create-mock-mandates.js
+ * Usage: TABLE_NAME=calytics-smart-debit-development-mandates REGION=eu-central-1 node create-mock-mandates.js
  *        Or from calytics-be-admin: node scripts/create-mock-mandates.js (uses default table/region)
  */
 
@@ -16,7 +16,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const TABLE_NAME = process.env.TABLE_NAME || 'calytics-cc-development-mandates';
+const TABLE_NAME = process.env.TABLE_NAME || 'calytics-smart-debit-development-mandates';
 const REGION = process.env.AWS_REGION || process.env.REGION || 'eu-central-1';
 const CLIENT_ID = process.env.CLIENT_ID || '117d49aa-fbc4-4a2e-9929-771ae29fef4f';
 
