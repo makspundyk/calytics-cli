@@ -192,6 +192,49 @@ print_section "Step 4: Creating API Keys"
 EXPIRES_AT_USAGE=$(date -u -d "+1 year" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+1y +"%Y-%m-%d %H:%M:%S")
 EXPIRES_AT_SYSTEM=$(date -u -d "+10 years" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date -u -v+10y +"%Y-%m-%d %H:%M:%S")
 
+# Per-product scopes — mirrors be-admin's product-api-scopes.ts (the single source of truth).
+# The cross-product FEATURE scopes `reconciliation` + `ais-connections` are granted to every
+# product that includes them (A2A / DebitGuard / SmartDebit), so the shared cross-product-features
+# endpoints (reconciliation, ais-connections) authorize with those products' CLIENT_SYSTEM keys.
+# Hyphen-lowercase convention matches the a2a runtime guard's exact set-membership check.
+product_scopes_list() {  # space-separated scope names
+    case "$1" in
+        DebitGuard)     echo "debit-guard.check debit-guard.get reconciliation ais-connections" ;;
+        A2A)            echo "a2a.generate-checkout a2a.check reconciliation ais-connections" ;;
+        SmartDebit)     echo "smart-debit.mandate reconciliation ais-connections" ;;
+        SmartSwitch)    echo "smart-switch.route" ;;
+        OwnershipCheck) echo "ownership-check" ;;
+        DebtCollection) echo "debt-collection.trigger debt-collection.get debt-collection.list" ;;
+        *)              echo "" ;;
+    esac
+}
+product_scopes() {  # SQL text[] literal for the api_keys.scopes column
+    _ps=$(product_scopes_list "$1")
+    if [ -z "$_ps" ]; then echo "ARRAY[]::text[]"; else echo "ARRAY['$(echo "$_ps" | sed "s/ /','/g")']::text[]"; fi
+}
+
+# Write the DynamoDB auth-lookup record (productType + normalized scopeList) so the a2a runtime
+# guard resolves the key with the right cross-product-features scopes locally. Mirrors be-admin's
+# mint-time write (api-key-gateway.repository.ts) + the auth-lookup scope backfill. Keyed by apiKeyValue.
+AUTH_LOOKUP_TABLE="${AUTH_API_KEY_LOOKUP_TABLE_NAME:-calytics-auth-local-api-key-lookup}"
+write_auth_lookup() {
+    wl_value="$1"; wl_client="$2"; wl_product="$3"; wl_type="$4"; wl_awsid="$5"
+    python3 - "$wl_value" "$wl_client" "$wl_product" "$wl_type" "$wl_awsid" "$(product_scopes_list "$wl_product")" > /tmp/cal-auth-lookup-item.json <<'PY'
+import sys, json
+v, c, p, t, a, scopes = sys.argv[1:7]
+print(json.dumps({
+    "apiKeyValue": {"S": v}, "clientId": {"S": c}, "productType": {"S": p},
+    "apiKeyType": {"S": t}, "enabled": {"BOOL": True}, "awsKeyId": {"S": a},
+    "scopeList": {"L": [{"S": s} for s in scopes.split() if s]},
+}))
+PY
+    aws --endpoint-url="$AWS_ENDPOINT_URL" dynamodb put-item \
+        --table-name "$AUTH_LOOKUP_TABLE" --item file:///tmp/cal-auth-lookup-item.json \
+        --region "${AWS_REGION:-eu-central-1}" 2>/dev/null \
+        && print_success "Auth-lookup scopeList written for $wl_product ($wl_type)" \
+        || print_info "Auth-lookup write skipped for $wl_product ($wl_type)"
+}
+
 # Provision one API Gateway key + encrypted DB row for a (product, key type).
 # Args: 1=product_type 2=api_key_value 3=label 4=api_key_type 5=expires_at 6=external_usage_plan_id
 create_api_key() {
@@ -271,7 +314,7 @@ create_api_key() {
             '$ck_expires',
             '$CLIENT_ID',
             NOW(),
-            ARRAY['debit_guard', 'ownership_check', 'a2a']::text[],
+            $(product_scopes "$ck_product"),
             '$ck_encrypted',
             '$ck_product',
             '$ck_type',
@@ -283,6 +326,10 @@ create_api_key() {
     echo "   API Key ID: $ck_id"
     echo "   AWS Key ID: $ck_aws_id"
     echo "   Expires At: $ck_expires"
+
+    # Populate the a2a auth-lookup (productType + scopeList) so the shared cross-product-features
+    # endpoints (reconciliation, ais-connections) authorize this key locally, same as sandbox/prod.
+    write_auth_lookup "$ck_value" "$CLIENT_ID" "$ck_product" "$ck_type" "$ck_aws_id"
 }
 
 for API_KEY_DATA in "${API_KEYS[@]}"; do
