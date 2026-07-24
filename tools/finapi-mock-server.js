@@ -8,8 +8,18 @@
  *  - mandatorAdmin batch deleteUsers (unknown ids silently ignored)
  *  - OAuth password + client_credentials grants; every call audited with the
  *    client_id used, so tests can assert mandator routing (M1 vs M2 creds).
+ *  - AIS backgroundUpdate refresh-task lifecycle (POST /api/tasks/backgroundUpdate,
+ *    GET /api/tasks/{id}) with controllable completion (POST /__tasks/complete) +
+ *    423/429 fault injection — drives the reconciliation refresh-throttle scenarios.
+ *  - AIS account statement (GET /api/v2/accounts, GET /api/v2/transactions) — the
+ *    credit lines reconciliation matches against. Seed them per scenario via
+ *    /__seed {accounts:[{id,iban,bankConnectionId}], transactions:[{id,accountId,
+ *    amount,currency,bankBookingDate,purpose?,endToEndReference?,counterpartIban?}]};
+ *    transactions are filtered per request by accountIds + min/maxBankBookingDate.
+ *    This is the one thing the real finAPI test bank forbids — editable statements.
  *
- * Test-control endpoints: GET /__state, POST /__seed, POST /__reset, POST /__faults.
+ * Test-control endpoints: GET /__state, POST /__seed, POST /__reset, POST /__faults,
+ *   POST /__tasks/complete.
  * Fault conventions (no /__faults needed): user id containing '-locked' -> 423 on
  * delete; '-gone' -> 401 on delete (user "already deleted" at vendor).
  *
@@ -35,6 +45,13 @@ const state = {
     // explicit POST /__tasks/complete (deterministic, observable in-flight window). Set a number (ms) via
     // /__seed {taskAutoCompleteMs} to auto-complete + fire the callback after that delay instead.
     taskConfig: { autoCompleteMs: null },
+    // AIS account statement fixtures (reconciliation matching). Set per scenario via /__seed so a test can
+    // control the exact credit lines matching runs against — the one thing the real finAPI test bank forbids.
+    // accounts: bankConnectionId(string) -> [{id, iban, accountHolderName, accountType, bankConnectionId}]
+    accounts: new Map(),
+    // transactions: a flat list of booked bank credits, filtered per request by accountId + booking-date window.
+    // {id, accountId, amount, currency, bankBookingDate:'YYYY-MM-DD', purpose?, endToEndReference?, counterpartIban?, type?}
+    transactions: [],
 };
 
 // client_id -> mandator label, mirrors the local secret seeded by the QA run
@@ -149,6 +166,8 @@ const server = http.createServer(async (req, res) => {
         state.webforms.clear();
         state.tasks.clear();
         state.taskConfig = { autoCompleteMs: null };
+        state.accounts.clear();
+        state.transactions.length = 0;
         return json(res, 200, { ok: true });
     }
     // Force a refresh task terminal + push its finalised callback to a2a (deterministic completion for
@@ -161,8 +180,37 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/__seed' && req.method === 'POST') {
         const parsedSeed = JSON.parse(body || '{}');
-        const { users = [], payments = [], webforms = [] } = parsedSeed;
+        const { users = [], payments = [], webforms = [], accounts = [], transactions = [] } = parsedSeed;
         if (parsedSeed.taskAutoCompleteMs !== undefined) state.taskConfig.autoCompleteMs = parsedSeed.taskAutoCompleteMs;
+        // Account statement fixtures. Passing `accounts`/`transactions` REPLACES the current statement (so a
+        // test controls the exact feed per cycle); omit them to leave the statement unchanged across seeds.
+        if (Array.isArray(parsedSeed.accounts)) {
+            state.accounts.clear();
+            for (const a of accounts) {
+                const list = state.accounts.get(String(a.bankConnectionId)) ?? [];
+                list.push({
+                    id: Number(a.id),
+                    iban: a.iban,
+                    accountHolderName: a.accountHolderName ?? a.holderName,
+                    accountType: a.accountType ?? 'Checking',
+                    bankConnectionId: Number(a.bankConnectionId),
+                });
+                state.accounts.set(String(a.bankConnectionId), list);
+            }
+        }
+        if (Array.isArray(parsedSeed.transactions)) {
+            state.transactions = transactions.map((t) => ({
+                id: Number(t.id),
+                accountId: Number(t.accountId),
+                amount: t.amount,
+                currency: t.currency ?? 'EUR',
+                bankBookingDate: t.bankBookingDate ?? t.bookingDate,
+                purpose: t.purpose,
+                endToEndReference: t.endToEndReference ?? t.endToEndId,
+                counterpartIban: t.counterpartIban ?? t.senderIban,
+                type: t.type,
+            }));
+        }
         for (const p of payments) {
             state.payments.set(Number(p.id), { id: Number(p.id), statusV2: p.statusV2 ?? 'PENDING', status: p.status ?? p.statusV2 ?? 'PENDING', bankMessage: p.bankMessage });
         }
@@ -383,6 +431,33 @@ const server = http.createServer(async (req, res) => {
         const seeded = state.webforms.get(wfId);
         if (seeded) return json(res, 200, seeded);
         return json(res, 200, { id: wfId, status: 'NOT_YET_OPENED', payload: {} });
+    }
+
+    // ── AIS account statement (reconciliation matching feed) ─────────────────────────────────────────────
+    // GET /api/v2/accounts?bankConnectionIds=<id>[,<id>] → the tenant's accounts for the connection(s).
+    if (url.pathname === '/api/v2/accounts' && req.method === 'GET') {
+        if (!principal(req)) return json(res, 401, { errors: [{ code: 'UNAUTHORIZED', message: 'token' }] });
+        const bankConnectionIds = (url.searchParams.get('bankConnectionIds') ?? '')
+            .split(',').map((s) => s.trim()).filter(Boolean);
+        const wanted = bankConnectionIds.length ? bankConnectionIds : [...state.accounts.keys()];
+        const accounts = wanted.flatMap((id) => state.accounts.get(String(id)) ?? []);
+        return json(res, 200, { accounts, paging: { page: 1, perPage: accounts.length, pageCount: 1, totalCount: accounts.length } });
+    }
+    // GET /api/v2/transactions?accountIds=<id>[,<id>]&minBankBookingDate=YYYY-MM-DD&maxBankBookingDate=YYYY-MM-DD&view=bankView
+    // → the booked credit lines for the account(s), filtered to the requested booking-date window. THE STATEMENT
+    //   matching runs against; seed it per scenario via /__seed {transactions:[…]}.
+    if (url.pathname === '/api/v2/transactions' && req.method === 'GET') {
+        if (!principal(req)) return json(res, 401, { errors: [{ code: 'UNAUTHORIZED', message: 'token' }] });
+        const accountIds = (url.searchParams.get('accountIds') ?? '')
+            .split(',').map((s) => s.trim()).filter(Boolean).map(Number);
+        const minDate = url.searchParams.get('minBankBookingDate') ?? undefined;
+        const maxDate = url.searchParams.get('maxBankBookingDate') ?? undefined;
+        const inScope = (t) =>
+            (accountIds.length === 0 || accountIds.includes(t.accountId)) &&
+            (minDate === undefined || t.bankBookingDate >= minDate) &&
+            (maxDate === undefined || t.bankBookingDate <= maxDate);
+        const transactions = state.transactions.filter(inScope);
+        return json(res, 200, { transactions, paging: { page: 1, perPage: transactions.length, pageCount: 1, totalCount: transactions.length } });
     }
 
     json(res, 404, { errors: [{ code: 'NOT_FOUND', message: url.pathname }] });
