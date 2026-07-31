@@ -230,6 +230,9 @@ const server = http.createServer(async (req, res) => {
                 // [{status:'PRESENT'|'NOT_PRESENT', expiresAt?: ISO, userActionRequired?: bool}]
                 consents: u.consents,
                 bankConnectionsError: u.bankConnectionsError, // HTTP code to fail the consent read
+                // Ownership set for GET /api/v2/bankConnections/{id} (orphaned-completion
+                // ownership verifier): ids NOT listed here 404 for this user, like real finAPI.
+                ownedBankConnections: (u.ownedBankConnections ?? []).map(Number),
             });
         }
         return json(res, 200, { ok: true, count: users.length });
@@ -278,7 +281,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/v2/users' && req.method === 'POST') {
         const payload = parseForm(body, 'json');
         const id = payload.id ?? `random-${Date.now()}`;
-        const password = `pw-${id}`;
+        // Real finAPI honors a caller-supplied password (single-user anchor model
+        // createUserForId relies on this); auto-generate only when absent.
+        const password = payload.password ?? `pw-${id}`;
         state.users.set(id, {
             id,
             password,
@@ -362,6 +367,24 @@ const server = http.createServer(async (req, res) => {
                 ? { payload: { errorCode: task.errorCode, errorMessage: task.errorMessage } }
                 : {}),
         });
+    }
+
+    // ── single bank connection (ownership-scoped, like real finAPI) ────────
+    // GET /api/v2/bankConnections/{id} → 200 with bank identity ONLY when the token's
+    // user owns the connection (seed via /__seed users[].ownedBankConnections); 404
+    // otherwise. Used by the orphaned-completion ownership verifier (getBankIdentity).
+    const singleBcMatch = url.pathname.match(/^\/api\/v2\/bankConnections\/(\d+)$/);
+    if (singleBcMatch && req.method === 'GET') {
+        if (!who || who.kind !== 'user') {
+            return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'invalid token' }] });
+        }
+        const user = state.users.get(who.userId);
+        if (!user || user.deleted) return json(res, 401, { errors: [{ code: 'UNAUTHORIZED_ACCESS', message: 'user gone' }] });
+        const bcId = Number(singleBcMatch[1]);
+        if (!(user.ownedBankConnections ?? []).includes(bcId)) {
+            return json(res, 404, { errors: [{ code: 'ENTITY_NOT_FOUND', message: `Bank connection ${bcId} not found` }] });
+        }
+        return json(res, 200, { id: bcId, name: `Mock Connection ${bcId}`, bank: { id: 280026, name: 'Mock Bank' } });
     }
 
     // ── bank connections (consent truth surface) ──────────────────────────
